@@ -1,0 +1,715 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0049)http://www.cnblogs.com/samchen2009/p/3368158.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script async="" type="text/javascript" src="./Android_input_system/gpt.js"></script><script type="text/javascript" src="./Android_input_system/encoder.js"></script>
+
+<title>图解Android - Android GUI 系统 (5) - Android的Event Input System - 漫天尘沙 - 博客园</title>
+<link type="text/css" rel="stylesheet" href="./Android_input_system/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="./Android_input_system/style.css">
+<link title="RSS" type="application/rss+xml" rel="alternate" href="http://www.cnblogs.com/samchen2009/rss">
+<link title="RSD" type="application/rsd+xml" rel="EditURI" href="http://www.cnblogs.com/samchen2009/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="http://www.cnblogs.com/samchen2009/wlwmanifest.xml">
+<script src="./Android_input_system/jquery.js" type="text/javascript"></script>  
+<script type="text/javascript">var currentBlogApp = 'samchen2009', cb_enable_mathjax=false;</script>
+<script src="./Android_input_system/blog-common.js" type="text/javascript"></script>
+<script async="" type="text/javascript" src="./Android_input_system/pubads_impl_32.js"></script><script type="text/javascript" src="./Android_input_system/osd.js"></script></head>
+<body>
+<a name="top"></a>
+
+<!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+	<a id="lnkBlogLogo" href="http://www.cnblogs.com/samchen2009/"><img id="blogLogo" src="./Android_input_system/logo.gif" alt="返回主页"></a>			
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle" href="http://www.cnblogs.com/samchen2009/">漫天尘沙</a></h1>
+<h2></h2>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="MyLinks1_HomeLink" class="menu" href="http://www.cnblogs.com/">博客园</a></li>
+<li><a id="MyLinks1_MyHomeLink" class="menu" href="http://www.cnblogs.com/samchen2009/">首页</a></li>
+<li><a class="menu" href="http://q.cnblogs.com/">博问</a></li>
+<li><a class="menu" href="http://home.cnblogs.com/ing/">闪存</a></li>
+<li><a id="MyLinks1_NewPostLink" class="menu" rel="nofollow" href="http://www.cnblogs.com/samchen2009/admin/EditPosts.aspx?opt=1">新随笔</a></li>
+<li><a id="MyLinks1_ContactLink" class="menu" rel="nofollow" href="http://space.cnblogs.com/msg/send/%e6%bc%ab%e5%a4%a9%e5%b0%98%e6%b2%99">联系</a></li>
+<li><a id="MyLinks1_Syndication" class="menu" href="http://www.cnblogs.com/samchen2009/rss">订阅</a>
+<!--<a id="MyLinks1_XMLLink" class="aHeaderXML" href="http://www.cnblogs.com/samchen2009/rss"><img src="http://www.cnblogs.com/images/xml.gif" alt="订阅" /></a>--></li>
+<li><a id="MyLinks1_Admin" class="menu" rel="nofollow" href="http://www.cnblogs.com/samchen2009/admin/EditPosts.aspx">管理</a></li>
+</ul>
+		<div class="blogStats">
+			
+			
+<!--done-->
+随笔- 9&nbsp;
+文章- 0&nbsp;
+评论- 22&nbsp;
+
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+
+<!--done-->
+<div id="topics">
+	<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="./Android_input_system/图解Android的input系统.htm">图解Android - Android GUI 系统 (5) - Android的Event Input System</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body"><h1>Android的用户输入处理</h1>
+<p>Android的用户输入系统获取用户按键（或模拟按键）输入，分发给特定的模块（Framework或应用程序）进行处理，它涉及到以下一些模块：</p>
+<ul>
+<li>Input Reader: 负责从硬件获取输入，转换成事件（Event), 并分发给Input Dispatcher.</li>
+<li>Input Dispatcher: 将Input Reader传送过来的Events 分发给合适的窗口，并监控ANR。</li>
+<li>Input Manager Service： 负责Input Reader 和 Input Dispatchor的创建，并提供Policy 用于Events的预处理。</li>
+<li>Window Manager Service：管理Input Manager 与 View（Window) 以及 ActivityManager 之间的通信。</li>
+<li>View and&nbsp;Activity：接收按键并处理。</li>
+<li>ActivityManager Service：ANR 处理。</li>
+</ul>
+<p>它们之间的关系如下图所示（黑色箭头代表控制信号传递方向，而红色箭头代表用户输入数据的传递方向）。</p>
+<p><img src="./Android_input_system/06230834-a8145552ca56482c92b6179dff6bdb5c.png" alt="" width="577" height="347"></p>
+<p>这块代码很多，但相对来说不难理解，按照惯例，我们先用一张大图（点击看大图）鸟瞰一下全貌先。</p>
+<p><a href="./Android_input_system/06231217-1c6eb385295b44d29ef7064e7788b731.png"><img src="./Android_input_system/06231217-1c6eb385295b44d29ef7064e7788b731.png" alt="" width="1200" style="width: 991px;"></a></p>
+<p>四种不同颜色代表了四个不同的线程, InputReader Thread，InputDispatch Thread 和 Server Thread 存在于SystemServer进程里。UI Thread则存在于Activity所在进程。颜色较深部分是比较重要，需要重点分析的模块。</p>
+<p><strong style="font-size: 1.5em; line-height: 1.5;"><span style="line-height: 1.5;">初始化</span></strong></p>
+<p><span style="line-height: 1.5;">整个输入系统的初始化可以划分为Java 和 Native两个部分，可以用两张时序图分别描述，首先看Java端，<br></span></p>
+<p><span style="line-height: 1.5;"><img src="./Android_input_system/07000238-d1c984cbaf4d4c7abeca35ea460d0223.png" alt="" style="width: 991px;"></span></p>
+<ol>
+<li>在SystemServer的初始化过程中，InputManagerService 被创建出来，它做的第一件事情就是初始化Native层，包括EventHub, InputReader 和 InputDispatcher，这一部分我们将在后面详细介绍。</li>
+<li>当InputManager Service 以及其他的System Service 初始化完成之后，应用程序就开始启动。如果一个应用程序有Activity（只有Activit能够接受用户输入），它要将自己的Window(ViewRoot)通过setView()注册到Window Manager Service 中。（详见<a class="titlelink" href="http://www.cnblogs.com/samchen2009/p/3367496.html">图解Android - Android GUI 系统 (2) - 窗口管理 (View, Canvas, Window Manager)</a>）。</li>
+<li>用户输入的捕捉和处理发生在不同的进程里（生产者：Input Reader 和 Input Dispatcher 在System Server 进程里，而消耗者，应用程序运行在自己的进程里），因此用户输入事件（Event)的传递需要跨进程。在这里，Android使用了Socket 而不是 Binder来完成。OpenInputChannelPair 生成了两个Socket的FD， 代表一个双向通道的两端，向一端写入数据，另外一端便可以读出，反之依然，如果一端没有写入数据，另外一端去读，则陷入阻塞等待。OpenInputChannelPair() 发生在WindowManager Service 内部。为什么不用binder？ 个人的分析是，Socket可以实现异步的通知，且只需要两个线程参与（Pipe两端各一个），假设系统有N个应用程序，跟输入处理相关的线程数目是 n+1 (1是发送（Input Dispatcher）线程）。然而，如果用Binder实现的话，为了实现异步接收，每个应用程序需要两个线程，一个Binder线程，一个后台处理线程，（不能在Binder线程里处理输入，因为这样太耗时，将会堵塞住发送端的调用线程）。在发送端，同样需要两个线程，一个发送线程，一个接收线程来接收应用的完成通知，所以，N个应用程序需要 2（N+1)个线程。相比之下，Socket还是高效多了。</li>
+<li>通过RegisterInputChannel, Window Manager Service 将刚刚创建的一个Socket FD，封装在InputWindowHandle(代表一个WindowState) 里传给InputManagerService。</li>
+<li>InputManagerService 通过JNI（NativeInputManager）最终调用到了InputDispatchor 的 RegisterInputChannel()方法，这里，一个Connection 对象被创建出来，代表与远端某个窗口(InputWindowHandle)的一条用户输入数据通道。一个Dispatcher可能有多个Connection（多个Window）同时存在。为了监听来自于Window的消息，InputDispator 通过AddFd 将这些个FD 加入到Looper中，这样，只要某个Window在Socket的另一端写入数据，Looper就会马上从睡眠中醒来，进行处理。</li>
+<li>到这里，ViewRootImpl 的 AddWindow 返回，WMS 将SocketPair的另外一个FD 放在返回参数 OutputChannel 里。</li>
+<li>接着ViewRootImpl 创建了WindowInputEventReceiver 用于接受InputDispatchor 传过来的事件，后者同样通过AddFd() 将读端的Socket FD 加入到Looper中，这样一旦InputDispatchor发送Event，Looper就会立即醒来处理。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol>
+<p>&nbsp;接下来看刚才没有讲完的NativeInit。</p>
+<p><img src="./Android_input_system/07010833-7e69a96f53df4c489549024edbd57f4e.png" alt=""></p>
+<ol>
+<li>NativeInit 是 NativeInputManager类的一个方法，在InputManagerService的构造函数中被调用。代码在 frameworks/base/services/jni/com_android_server_input_inputManagerService.cpp.</li>
+<li>首先创建一个EventHub, 用来监听所有的event输入。</li>
+<li>创建一个InputDispatchor对象。</li>
+<li>创建一个InputReader对象，他的输入是EventHub， 输出是InputDispatchor。</li>
+<li>然后分别为InputReader 和 InputDispatchor 创建各自的线程。注意，当前运行在System Server 的 WMThread线程里。</li>
+<li>接着，InputManagerService 调用NativeStart 通知InputReader 和 InputDispatchor 开始工作。</li>
+<li>InputDispatchor是InputReader的消费者，它的线程首先启动，进入Looper等待状态。</li>
+<li>接着 InputReader 线程启动，等待用户输入的发生。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol>
+<p>至此，一切准备工作就绪，万事具备，之欠用户一击了。 </p>
+<h2>Eventhub 和 Input Reader</h2>
+<p>Android设备可以同时连接多个输入设备，比如说触摸屏，键盘，鼠标等等。用户在任何一个设备上的输入就会产生一个中断，经由Linux内核的中断处理以及设备驱动转换成一个Event，并传递给用户空间的应用程序进行处理。每个输入设备都有自己的驱动程序，数据接口也不尽相同，如何在一个线程里（上面说过只有一个InputReader Thread)把所有的用户输入都给捕捉到? 这首先要归功于Linux 内核的输入子系统（Input Subsystem), 它在各种各样的设备驱动程序上加了一个抽象层，只要底层的设备驱动程序按照这层抽象接口来实现，上层应用就可以通过统一的接口来访问所有的输入设备。这个抽象层有三个重要的概念，input handler, input handle 和 input_dev,它们的关系如下图所示：</p>
+<p>&nbsp; &nbsp;&nbsp;<img src="./Android_input_system/07195811-678e3594c3fa4dcead6d99f2b9f65267.png" alt="" width="551" height="430"></p>
+<p>&nbsp;</p>
+<ul>
+<li>input_dev 代表底层的设备，比如图中的“USB keyboard" 或 "Power Button" (PC的电源键），所有设备的input_dev 对象保存在一个全局的input_dev 队列里。</li>
+<li>input_handler 代表某类输入设备的处理方法，比如说 evdev就是专门处理输入设备产成的Event（事件），而“sysrq" 是专门处理键盘上“sysrq"与其他按键组合产生的系统请求，比如“ALT+SysRq+p"（先Ctrl+ALT+F1切换到虚拟终端)可以打印当前CPU的寄存器值。所有的input_handler 存放在 input_handler队列里。</li>
+<li>一个input_dev 可以有多个input_handler, 比如下图中“USB Mouse" 设备可以由”evdev" 和 “mousedev" 来分别处理它产生的输入。</li>
+<li>同样，一个input_handler 可以用于多种输入设备，比如“USB Keyboard", "Power Button" 都可以产成Event，所以，这些Event都可以交由evdev进行处理。</li>
+<li>Input handle 用来关联某个input_dev 和 某个 input_handler, 它对应于下图中的紫色的原点。每个input handle 都会生成一个文件节点，比如图中4个 evdev的handle就对应与 /dev/input/下的四个文件"event0~3". 通过input handle, 可以找到对应的input_handler 和 input_dev.</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p>简单说来，input_dev对应于底层驱动，而input_handler是个上层驱动，而input_handle 提供给应用程序标准的文件访问接口来打通这条上下通道。通过Linux input system获取用户输入的流程简单如下：</p>
+<ol>
+<li>设备通过input_register_dev 将自己的驱动注册到Input 系统。</li>
+<li>各种Handler 通过 input_register_handler将自己注册到Input系统中。</li>
+<li>每一个注册进来的input_dev 或 Input_handler 都会通过input_connect() 寻找对方，生成对应的 input_handle，并在/dev/input/下产成一个设备节点文件.&nbsp;</li>
+<li>应用程序通过打开(Open)Input_handle对应的文件节点，打开其对应的input_dev 和 input_handler的驱动。这样，当用户按键时，底层驱动就能捕捉到，并交给对应的上次驱动（handler)进行处理，然后返回给应用程序，流程如下图中红色箭头所示。 </li>
+
+</ol>
+<p>上图中的深色点就是 Input Handle， 左边垂直方向是Input Handler， 而水平方向是Input Dev。 下面是更为详细的一个流程图，感兴趣的同学可以点击大图看看。</p>
+<p><a href="./Android_input_system/07225317-0771ad2449024d3eb90d1690710a676e.png"><img src="./Android_input_system/07225317-0771ad2449024d3eb90d1690710a676e.png" alt="" width="600/"></a></p>
+<p>&nbsp;</p>
+<p>所以，只要打开 /dev/input/ 下的所有 event* 设备文件，我们就可以有办法获取所有输入设备的输入事件，不管它是触摸屏，还是一个USB 设备，还是一个红外遥控器。Android中完成这个工作的就是EventHub。</p>
+<p>EventHub实现在 framework/base/services/input/EventHub.cpp, 它和InputReader 的工作流程如下图所示：</p>
+<p><img src="./Android_input_system/08002356-d9405c2dfd9c4ebbacbf68ef958500a4.png" alt="" style="width: 991px;">&nbsp;</p>
+<ol>
+<li>&nbsp;NativeInputManager的构造函数里第一件事情就是创建一个EventHub对象，它的构造函数里主要生成并初始化几个控制的FD：<br><ol>
+<li>mINotifyFd: 用来监控""/dev/input"目录下是否有文件生成，有的话说明有新的输入设备接入，EventHub将从epool_wait中唤醒，来打开新加入的设备。<em><br></em></li>
+<li>mWakeReaderFD， mWakeWriterFD： 一个Pipe的两端，当往mWakeWriteFD 写入数据的时候，等待在mWakeReaderFD的线程被唤醒，这里用来给上层应用提供唤醒等待线程，比如说，当上层应用改变输入属性需要EventHub进行相应更新时。</li>
+<li>mEpollFD，用于epoll_wait()的阻塞等待，这里通过epoll_ctrl(EPOLL_ADD_FD, fd) 可以等待多个fd的事件，包括上面提到的mINotifyFD, mWakeReaderFD, 以及输入设备的FD。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol></li>
+<li>紧接着，InputManagerService启动InputReader 线程，进入无限的循环，每次循环调用loopOnce(). 第一次循环，会主动扫描 "/dev/input/" 目录，并打开下面的所有文件，通过ioctl()从底层驱动获取设备信息，并判断它的设备类型。这里处理的设备类型有：INPUT_DEVICE_CLASS_KEYBOARD，&nbsp;INPUT_DEVICE_CLASS_TOUCH，&nbsp;INPUT_DEVICE_CLASS_DPAD，INPUT_DEVICE_CLASS_JOYSTICK 等。</li>
+<li>找到每个设备对应的键值映射文件，读取并生产一个KeyMap 对象。一般来说，设备对应的键值映射文件是 "/system/usr/keylayout/Vendor_%04x_Product_%04x".</li>
+<li>将刚才扫描到的/dev/input 下所有文件的FD 加到epool等待队列中，调用epool_wait() 开始等待事件的发生。</li>
+<li>某个时间发生，可能是用户按键输入，也可能是某个设备插入，亦或用户调整了设备属性，epoll_wait() 返回，将发生的Event 存放在mPendingEventItems 里。如果这是一个用户输入，系统调用Read() 从驱动读到这个按键的信息，存放在rawEvents里。</li>
+<li>getEvents() 返回，进入InputReader的processEventLocked函数。</li>
+<li>通过rawEvent 找到产生时间的Device，再找到这个Device对应的InputMapper对象，最终生成一个NotifyArgs对象，将其放到NotifyArgs的队列中。</li>
+<li>第一次循环，或者后面发生设备变化的时候（比如说设备拔插），调用 NativeInputManager 提供的回调，通过JNI通知Java 层的Input Manager Service 做设备变化的相应处理，比如弹出一个提示框提示新设备插入。这部分细节会在后面介绍。</li>
+<li>调用NotifyArgs里面的Notify()方法，最终调用到InputDispatchor 对应的Notify接口（比如NotifyKey) 将接下来的处理交给InputDispatchor，EventHub 和 InputReader 工作结束，但马上又开始新的一轮等待，重复6～9的循环。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol>
+<p>&nbsp;&nbsp;</p>
+<h2>Input Dispatcher</h2>
+<p>接下来看看目前为止最长一张时序图，通过下面18个步骤，事件将发送到应用程序进行处理。</p>
+<p><a href="./Android_input_system/09182433-546a06b6bc6449469821ceb144fa36a1.png"><img src="./Android_input_system/09182433-546a06b6bc6449469821ceb144fa36a1.png" alt="" width="1100" style="width: 991px;"></a></p>
+<ol>
+<li>接上节的最后一步，NotifyKey() 的实现在Input Dispatcher 内部，他首先做简单的校验，对于按键事件，只有Action 是 AKEY_EVENT_ACTION_DOWN 和 AKEY_EVENT_ACTION_UP，即按下和弹起这两个Event别接受。</li>
+<li>Input Reader 传给Input Dispather的数据类型是 NotifyKeyArgs， 后者在这里将其转换为 KeyEvent, 然后交由 Policy 来进行第一步的解析和过滤，interceptKeyBeforeQueuing, 对于手机产品，这个工作是在PhoneWindowManager 里完成，（不同类型的产品可以定义不同的WindowManager, 比如GoogleTV 里用到的是TVWindowManager)。KeyEvent 在这里将会被分为三类：<ol>
+<li>System Key: 比如说 音量键，Power键，电话键，以及一些特殊的组合键，如用于截屏的音量+Power，等等。部分System Key 会在这里立即处理，比如说电话键，但有一些会放到后面去做处理，比如说音量键，但不管怎样，这些键不会传给应用程序，所以称为系统键。</li>
+<li>Global Key：最终产品中可能会有一些特殊的按键，它不属于某个特定的应用，在所有应用中的行为都是一样，但也不包含在Andrioid的系统键中，比如说GoogleTV 里会有一个“TV” 按键，按它会直接呼起“TV”应用然后收看电视直播，这类按键在Android定义为Global Key.</li>
+<li>User Key：除此之外的按键就是User Key, 它最终会传递到当前的应用窗口。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol></li>
+<li style="text-align: left;">phoneWindowManager的interceptKeyBeforeQueuing() 最后返回了wmActiions，里面包含若干个flags，NativeInputManager在handleInterceptActions()， 假如用户按了Power键，这里会通知Android睡眠或唤醒。最后，返回一个 policyFlags，结束第一次的intercept 过程。</li>
+<li>接下来，按键马上进入第二轮处理。如果用户在Setting-&gt;Accessibility 中选择打开某些功能，比如说手势识别，Android的AccessbilityManagerService（辅助功能服务) 会创建一个 InputFilter 对象，它会检查输入的事件，根据需要可能会转换成新的Event，比如说两根手指头捏动的手势最终会变成ZOOM的event. 目前，InputManagerService 只支持一个InputFilter, 新注册的InputFilter会把老的覆盖。InputFilter 运行在SystemServer 的 ServerThread 线程里（除了绘制，窗口管理和Binder调用外，大部分的System Service 都运行在这个线程里）。而filterInput() 的调用是发生在Input Reader线程里，通过InputManagerService 里的 InputFilterHost 对象通知另外一个线程里的InputFilter 开始真正的解析工作。所以，InputReader 线程从这里结束一轮的工作，重新进入epoll_wait() 等待新的用户输入。InputFilter 的工作也分为两个步骤，首先由InputEventConsistencyVerifier 对象（InputEventConsistencyVerifier.java）对输入事件的完整性做一个检查，检查事件的ACTION_DOWN 和 ACTION_UP 是否一一配对。很多同学可能在Android Logcat 里看到过以下一些类似的打印："ACTION_UP but key was not down." 就出自此处。接下来，进入到AccessibilityInputFilter 的 onInputEvent()，这里将把输入事件（主要是MotionEvent)进行处理，根据需要变成另外一个Event，然后通过sendInputEvent（）将事件发回给InputDispatcher。最终调用到injectInputEvent() 将这个事件送入 mInBoundQueue.</li>
+<li>这个时候，InputDispather 还在Looper中睡眠等待，injectInputEvent（）通过wake() 将其唤醒。这是进入Input Dispatcher 线程。</li>
+<li>InputDispatcher 大部分的工作在 dispatcherOnce 里完成。首先从mInBoundQueue 中读出队列头部的事件 mPendingEvent, 然后调用 pokeUserActivity(). poke的英文意思是"搓一下, 捅一下“， 这个函数的目的也就是”捅一下“PowerManagerService 提醒它”别睡眠啊，我还活着呢“，最终调用到PowerManagerService 的 updatePowerStateLocked()，防止手机进入休眠状态。需要注意的是，上述动作不会马上执行，而是存储在命令队列，mCommandQueue里，这里面的命令会在后面依次被执行。</li>
+<li>接下来是dispatchKeyLocked(), 第一次进去这个函数的时候，先检查Event是否已经过处理（interceptBeforeDispatching), 如果没有，则生成一个命令，同样放入mCommandQueue里。</li>
+<li>runCommandsLockedInterruptible() 依次执行mCommandQueue 里的命令，前面说过，pokeUserActivity 会调用PowerManagerService 的 updatePowerStateLocked(), 而 interceptKeyBeforeDispatching() 则最终调用到PhoneWindowManager的同名函数。我们在interceptBeforeQueuing 里面提到的一些系统按键在这个被执行，比如 HOME/MENU/SEARCH 等。</li>
+<li>接下来，处理前面提过GlobalKey，GlobalKeyManager 通过broadcast将这些全局的Event发送给感兴趣的应用。最终，interceptKeyBeforeDispatching 将返回一个Int值，-1 代表Skip，这个Event将不会发送给应用程序。0 代表 Continue, 将进入下一步的处理。1 则表明还需要后续的Event才能做出决定。</li>
+<li>命令运行完之后，退出 dispatchOnce， 然后调用pollOnce 进入下一轮等待。但这里不会被阻塞，因为timeout值被设成了0.</li>
+<li>第二次进入dispatchKeyLocked(), 这是Event的状态已经设为”已处理“，这时候才真正进入了发射阶段。</li>
+<li>接下来调用 findFocusedWindowTargetLocked() 获取当前的焦点窗口，这里面会做一件非常重要的事情，就是检测目标应用是否有ANR发生，如果下诉条件满足，则说明可能发生了ANR：<ol>
+<li>目标应用不会空，而目标窗口为空。说明应用程序在启动过程中出现了问题。</li>
+<li>目标 Activity 的状态是Pause，即不再是Focused的应用。</li>
+<li>目标窗口还在处理上一个事件。这个我们下面会说到。</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol></li>
+<li>如果目标窗口处于正常状态，调用dispatchEventLocked() 进入真正的发送程序。</li>
+<li>这里，事件又换了一件马甲，从EventEntry 变成 DispatchEntry, 并送人mOutBoundQueue。然后调用startDispatchCycle() 开始发送。</li>
+<li>最终的发送发生在InputPublish的sendMessage()。这里就用到了我们前面提到的SocketPair, 一旦sendMessage() 执行，目标窗口所在进程的Looper线程就会被唤醒，然后读取键值并进行处理，这个过程我们下面马上就会谈到。</li>
+<li>乖乖，还没走完啊？是的，工作还差最后一步，Input Dispatcher给这个窗口发送下一个命令之前，必须等待该窗口的回复，如果超过5s没有收到，就会通过Input Manager Service 向Activity Manager 汇报，后者会弹出我们熟知的 "Application No Response" 窗口。所以，事件会放入mWaitQueue进行暂存。如果窗口一切正常，完成按键处理后它会调用InputConsumer的sendFinishedSignal()&nbsp;往SocketPair 里写入完成信号，Input Dispatcher 从 Loop中醒来，并从Socket中读取该信号，然后从mWaitQueue 里清除该事件标志其处理完毕。</li>
+<li><span style="line-height: 1.5;">并非所有的事件应用程序都会处理，如果没有处理，窗口程序返回的完成消息里的&nbsp;msg.body.finished.handled 会等于false，InputDispatcher 会调用dispatchKeyUnhandled() 将其交给PhoneWindowManager。Android 在这里提供了一个Fallback机制，如果在 /system/usr/keychars/ 下面的kcm文件里定义了 fallback关键字，Android就识别它为一个Fallback Keycode。当它的Parent Keycode没有被应用程序处理，InputDispatcher 会把 Fallback Keycode 当成一个新的Event，重新发给应用程序。下面是一个定义Fallback Key 的例子。如果按了小键盘的0且应用程序不受理它，InputDispatcher 会再发送一个'INSERT' event 给应用程序。</span><br><br>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Android_input_system/copycode.gif" alt="复制代码"></a></span></div>
+<pre>#/system/usr/keychars/<span style="color: #000000;">generic.kcm
+...
+key NUMPAD_0 {
+    label: </span><span style="color: #800000;">'</span><span style="color: #800000;">0</span><span style="color: #800000;">'</span>             <span style="color: #008000;">//</span><span style="color: #008000;">打印字符</span>
+    <span style="color: #0000ff;">base</span>: fallback INSERT  <span style="color: #008000;">//</span><span style="color: #008000;">behavior</span>
+    numlock: <span style="color: #800000;">'</span><span style="color: #800000;">0</span><span style="color: #800000;">'</span>        <span style="color: #008000;">//</span><span style="color: #008000;">在一个textView里输出的字符</span>
+}</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="./Android_input_system/copycode.gif" alt="复制代码"></a></span></div></div>
+</li>
+<li>经历了重重关卡，一个按键发送的流程终于完成了，不管有没有Fallback Key存在，调用startDispatcherCycle() 开始下一轮征程。。。</li>
+</ol>
+<p>史上最长的流程图终于介绍完了，有点迷糊了？好吧，再看看下面这张图总结一下：</p>
+<ul>
+<li>InputDispatcher 是一个异步系统，里面用到3个Queue（队列）来保存中间任务和事件，分别是 mInBoundQueue, mOutBoundQueue，mWaitQueue不同队列的进出划分了按键的不同处理阶段。</li>
+<li>InputReader 采集的输入实现首先经过InterceptBeforeQueuing处理，Android 系统会将这些按键分类（System/Global/User)， 这个过程是在InputReader线程里完成。</li>
+<li>如果是Motion Event, filterEvent()可能会将其转换成其他的Event。然后通过InjectKeyEvent 将这个按键发给InputDispatcher。这个过程是在System Process的ServerThread里完成。</li>
+<li>在进入mOutBoundQueue 之前，首先要经过 interceptBeforeDispatching() 的处理，System 和 Global 事件会在这个处理，而不会发送给用户程序。</li>
+<li>通过之前生成的Socket Pair, InputPublish 将 Event发送给当前焦点窗口，然后InputDispatcher将Event放入mWaitQueue 等待窗口的回复。</li>
+<li>如果窗口回复，该对象被移出mWaitQueue，&nbsp;一轮事件处理结束。如果窗口没有处理该事件，从kcm文件里搜寻Fallback 按键，如果有，则重新发送一个新的事件给用户。</li>
+<li>如果超过5s没有收到用户回复，则说明用户窗口出现阻塞，InputDispather 会通过Input Manager Service发送ANR给ActivityManager。</li>
+</ul>
+<h2><a href="./Android_input_system/AAtJbtBiDIos7Uex-52A09.png"><img src="./Android_input_system/AAtJbtBiDIos7Uex-52A09.png" alt="" width="1100/" style="width: 991px;">&nbsp;</a></h2>
+<h2>Key processing</h2>
+<p><span style="line-height: 1.5;">前面我们说过，NativeInputEventReceiver() 通过addFd() 将SocketPair的一个FD 加入到UI线程的loop里，这样，当Input Dispatcher在Socket的另外一端写入Event数据，应用程序的UI线程就会从睡眠中醒来，开始事件的处理流程。时序图如下所示：</span></p>
+<p><span style="line-height: 1.5;">&nbsp;</span></p>
+<p>&nbsp;<img src="./Android_input_system/12182030-2e67f0b4f93d44278fabfe7e8332c21d.png" alt="" width="1200/" style="width: 991px;"></p>
+<ol>
+<li>&nbsp;收到的时间首先会送到队列中，ViewRootImpl 通过 deliverInputEvent() 向InputStage传递消息。</li>
+<li>InputStage 是 Android 4.3 新推出的实现，它将输入事件的处理分成若干个阶段（Stage）, 如果当前有输入法窗口，则事件处理从 NativePreIme 开始，否则的话，从EarlyPostIme 开始。事件会依次经过每个Stage，如果该事件没有被标识为 “Finished”， 该Stage就会处理它，然后返回处理结果，Forward 或 Finish， Forward 运行下一Stage继续处理，而Finished事件将会简单的Forward到下一级，直到最后一级 Synthetic InputStage。流程图和每个阶段完成的事情如下图所示。<br><br><a href="./Android_input_system/I6JISipb1F5tzN5d-C4027.png"><img src="./Android_input_system/I6JISipb1F5tzN5d-C4027.png" alt="" width="1100/" style="width: 991px;"></a></li>
+<li>最后 通过finishInputEvent() 回复InputDispatcher。</li>
+
+
+
+
+
+
+
+
+</ol>
+<h2><span style="line-height: 1.5;"><span style="font-size: 14px; line-height: 1.5;">&nbsp;</span></span></h2></div><div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="blog_post_info"><div id="BlogPostCategory">分类: <a href="http://www.cnblogs.com/samchen2009/category/524173.html">图解Android 系列</a></div>
+<div id="EntryTag">标签: <a href="http://www.cnblogs.com/samchen2009/tag/Android/">Android</a>, <a href="http://www.cnblogs.com/samchen2009/tag/Input%20Manager%20Service/">Input Manager Service</a>, <a href="http://www.cnblogs.com/samchen2009/tag/Input%20Dispatcher/">Input Dispatcher</a>, <a href="http://www.cnblogs.com/samchen2009/tag/Input%20reader/">Input reader</a>, <a href="http://www.cnblogs.com/samchen2009/tag/Key%20processing/">Key processing</a></div>
+<div id="green_channel">
+绿色通道：
+<a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(cb_entryId,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+<a id="green_channel_follow" onclick="c_follow();" href="javascript:void(0);">关注我</a>
+<a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a><a id="green_channel_contact" href="http://space.cnblogs.com/msg/send/%e6%bc%ab%e5%a4%a9%e5%b0%98%e6%b2%99" target="_blank">与我联系</a>
+<a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./Android_input_system/icon_weibo_24.png" alt=""></a>
+</div>
+<div id="author_profile">
+<div id="author_profile_info" class="author_profile_info">
+<a href="http://home.cnblogs.com/u/samchen2009/" target="_blank"><img src="./Android_input_system/20131012112016.png" class="author_avatar" alt=""></a>
+<div id="author_profile_detail" class="author_profile_info">
+<a href="http://home.cnblogs.com/u/samchen2009/">漫天尘沙</a><br>
+<a href="http://home.cnblogs.com/u/samchen2009/followees">关注 - 0</a><br>
+<a href="http://home.cnblogs.com/u/samchen2009/followers">粉丝 - 21</a>
+</div>
+</div>
+<div class="clear"></div>
+<div id="author_profile_honor"></div>
+<div id="author_profile_follow">
+    <a href="javascript:void(0);" onclick="c_follow();return false;">+加关注</a>
+</div>
+</div>
+<div id="div_digg">										
+	<div class="diggit" onclick="votePost(cb_entryId,&#39;Digg&#39;)"> 
+		<span class="diggnum" id="digg_count">2</span>
+	</div>
+	<div class="buryit" onclick="votePost(cb_entryId,&#39;Bury&#39;)"> 
+		<span class="burynum" id="bury_count">0</span>
+	</div>
+	<div class="clear"></div>	
+	<div class="diggword" id="digg_tips">
+    (请您对文章做出评价)
+    </div>	
+</div>
+</div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="http://www.cnblogs.com/samchen2009/p/3404897.html" class="p_n_p_prefix">« </a> 上一篇：<a href="http://www.cnblogs.com/samchen2009/p/3404897.html" title="发布于2013-11-03 13:33">推荐书单</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2013-11-12 19:27</span> <a href="http://www.cnblogs.com/samchen2009/">漫天尘沙</a> 阅读(<span id="post_view_count">1099</span>) 评论(<span id="post_comment_count">6</span>)  <a href="http://www.cnblogs.com/samchen2009/admin/EditPosts.aspx?postid=3368158" rel="nofollow">编辑</a> <a href="http://www.cnblogs.com/samchen2009/p/3368158.html#" onclick="AddToWz(3368158);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,isLogined=false,cb_blogId=162102,cb_entryId=3368158,cb_blogApp=currentBlogApp,cb_blogUserGuid='091ba064-b412-e311-8d02-90b11c0b17d6',cb_entryCreatedDate='2013/11/12 19:27:00';loadViewCount(cb_entryId);</script>
+	
+</div><!--end: topics 文章、评论容器-->
+<a name="!comments"></a><div id="blog-comments-placeholder"><div id="comments_pager_top"></div>
+<br>
+<div class="feedback_area_title">评论列表</div>
+<div class="feedbackNoItems"></div>	
+
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2815246" class="layer">#1楼</a><a name="2815246" id="comment_anchor_2815246"></a>  <span class="comment_date">2013-11-12 22:46</span> <a id="a_comment_author_2815246" href="http://www.cnblogs.com/bo123456/" target="_blank">誤人子弟</a> <a href="http://space.cnblogs.com/msg/send/%e8%aa%a4%e4%ba%ba%e5%ad%90%e5%bc%9f" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2815246" class="blog_comment_body">学习啦</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2815246,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2815246,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2828804" class="layer">#2楼</a><a name="2828804" id="comment_anchor_2828804"></a>  <span class="comment_date">2013-12-02 19:00</span> <a id="a_comment_author_2828804" href="http://home.cnblogs.com/u/588001/" target="_blank">mzarmgcc</a> <a href="http://space.cnblogs.com/msg/send/mzarmgcc" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2828804" class="blog_comment_body">图解Android – Android GUI 系统 (3) – Surface Flinger (TBD)<br>和<br>图解Android – Android GUI 系统 (4) – Activity的生命周期<br>是不是不见了</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2828804,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2828804,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832281" class="layer">#3楼</a><a name="2832281" id="comment_anchor_2832281"></a>  <span class="comment_date">2013-12-07 11:02</span> <a id="a_comment_author_2832281" href="http://www.cnblogs.com/suchangyu/" target="_blank">suchangyu</a> <a href="http://space.cnblogs.com/msg/send/suchangyu" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2832281" class="blog_comment_body">请教博主一个问题：<br>在WindowManagerService（System_server进程）的openInputChannelPair中所创建的socket pair，通过IPC（IWindowSession）返回到ViewRootImpl（Application进程）后，这个socket还可以用吗？<br>这里是否有一个句柄的跨进程共享使用的问题，不知道Android中怎么解决的？<br><br>WMS创建socket pair的方法也没什么特别：<br>status_t InputChannel::openInputChannelPair(const String8&amp; name,  sp&lt;InputChannel&gt;&amp; outServerChannel, sp&lt;InputChannel&gt;&amp; outClientChannel) {<br>    int sockets[2];<br>    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, sockets)) {<br>    .....<br><br>Linux系统中的socket句柄是和进程相关的，把这个句柄传到另一个进程中后，应该是不能使用的。</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2832281,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2832281,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832524" class="layer">#4楼</a><a name="2832524" id="comment_anchor_2832524"></a>[<span class="louzhu">楼主</span>]  <span class="comment_date">2013-12-07 20:40</span> <a id="a_comment_author_2832524" href="http://www.cnblogs.com/samchen2009/" target="_blank">漫天尘沙</a> <a href="http://space.cnblogs.com/msg/send/%e6%bc%ab%e5%a4%a9%e5%b0%98%e6%b2%99" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2832524" class="blog_comment_body"><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2828804" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,2828804);">@</a>mzarmgcc<br>不好意思，最近工作有点忙，这两章一直没来得及写，接下来一定补上。</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2832524,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2832524,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_2832524_avatar" style="display:none;">http://pic.cnitblog.com/face/563439/20131012112016.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832544" class="layer">#5楼</a><a name="2832544" id="comment_anchor_2832544"></a>[<span class="louzhu">楼主</span>]  <span class="comment_date">2013-12-07 21:18</span> <a id="a_comment_author_2832544" href="http://www.cnblogs.com/samchen2009/" target="_blank">漫天尘沙</a> <a href="http://space.cnblogs.com/msg/send/%e6%bc%ab%e5%a4%a9%e5%b0%98%e6%b2%99" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2832544" class="blog_comment_body"><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832281" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,2832281);">@</a>suchangyu<br><br>Android依靠Binder driver 可以将一个进程的fd传给另外一个进程。大概的流程是这样的，进程1 通过 writeFileDescriptor() (parcel.java) 将fd封装在Parcel里，native的Parcel (parcel.cpp) 会将其封成一个类型为 BINDER_TYPE_FD 的 flat_binder_object 对象，然后传入内核。内核最终会通过 __fd_install() 将其装换成目标进程能够使用的fd.</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2832544,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2832544,&#39;Bury&#39;,this)">反对(0)</a></div><span id="comment_2832544_avatar" style="display:none;">http://pic.cnitblog.com/face/563439/20131012112016.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832689" class="layer">#6楼</a><a name="2832689" id="comment_anchor_2832689"></a><span id="comment-maxId" style="display:none;">2832689</span><span id="comment-maxDate" style="display:none;">2013/12/8 10:27:42</span>  <span class="comment_date">2013-12-08 10:27</span> <a id="a_comment_author_2832689" href="http://www.cnblogs.com/suchangyu/" target="_blank">suchangyu</a> <a href="http://space.cnblogs.com/msg/send/suchangyu" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_2832689" class="blog_comment_body"><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2832544" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,2832544);">@</a>漫天尘沙<br>谢谢楼主的帮助，还是对Binder理解不够啊。</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(2832689,&#39;Digg&#39;,this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(2832689,&#39;Bury&#39;,this)">反对(0)</a></div>
+			</div>
+		</div>
+	<div id="comments_pager_bottom"></div></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" id="lnk_RefreshComments" onclick="return RefreshCommentList();">刷新评论</a><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#" onclick="return RefreshPage();">刷新页面</a><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#top">返回顶部</a></div>
+<div id="comment_form_container"><div class="login_tips">注册用户登录后才能发表评论，请 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login(&#39;commentform&#39;);">登录</a> 或 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，<a href="http://www.cnblogs.com/">访问</a>网站首页。</div></div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"><a target="_blank" href="http://q.cnblogs.com/">程序员问答平台，解决您的技术难题</a></div>
+<div id="site_nav_under"><a href="http://www.cnblogs.com/" target="_blank" title="程序员的网上家园">博客园首页</a><a href="http://q.cnblogs.com/" target="_blank" title="程序员问答社区">博问</a><a href="http://news.cnblogs.com/" target="_blank" title="IT新闻">新闻</a><a href="http://home.cnblogs.com/ing/" target="_blank">闪存</a><a href="http://job.cnblogs.com/" target="_blank">程序员招聘</a><a href="http://kb.cnblogs.com/" target="_blank">知识库</a></div>
+<div id="ad_under_post_holder">
+
+<div id="google_ad_c1" class="c_ad_block">
+    <!-- cnblogs_blogpost_C1_sitehome -->
+    <div id="div-gpt-ad-1346480159711-0" style="width:300px; height:250px;">
+    
+    <div id="google_ads_iframe_/1090369/cnblogs_blogpost_C1_sitehome_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/cnblogs_blogpost_C1_sitehome_0" name="google_ads_iframe_/1090369/cnblogs_blogpost_C1_sitehome_0" width="300" height="250" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" src="javascript:"<html><body style='background:transparent'></body></html>"" style="border: 0px; vertical-align: bottom;"></iframe></div><iframe id="google_ads_iframe_/1090369/cnblogs_blogpost_C1_sitehome_0__hidden__" name="google_ads_iframe_/1090369/cnblogs_blogpost_C1_sitehome_0__hidden__" width="0" height="0" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" src="javascript:"<html><body style='background:transparent'></body></html>"" style="border: 0px; vertical-align: bottom; visibility: hidden; display: none;"></iframe></div>
+</div>
+<div id="blog_news_kb"><div class="itnews c_ad_block"><b>最新IT新闻</b>:<br> ·  <a href="http://news.cnblogs.com/n/200595/" target="_blank">Facebook情人节数据分析：5到7月小心分手！</a><br> ·  <a href="http://news.cnblogs.com/n/200594/" target="_blank">腾讯入股大众点评，最着急的是百度？</a><br> ·  <a href="http://news.cnblogs.com/n/200593/" target="_blank">Jawbone将完成6亿美元融资 苹果地位受到威胁</a><br> ·  <a href="http://news.cnblogs.com/n/200592/" target="_blank">打造你自己的程序员品牌</a><br> ·  <a href="http://news.cnblogs.com/n/200591/" target="_blank">MIT声明支持学生项目Tidbit</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div><div class="itnews c_ad_block" id="kb_block"><b>最新知识库文章</b>:<br><div id="kb_recent"> ·  <a href="http://kb.cnblogs.com/page/200528/" target="_blank">关于在线教育和线下教育的六个问题</a><br> ·  <a href="http://kb.cnblogs.com/page/199787/" target="_blank">别错把需求当市场</a><br> ·  <a href="http://kb.cnblogs.com/page/199251/" target="_blank">浏览器中关于事件的那点事儿</a><br> ·  <a href="http://kb.cnblogs.com/page/198974/" target="_blank">全栈工程师就是一棵歪脖子树</a><br> ·  <a href="http://kb.cnblogs.com/page/191744/" target="_blank">Linux上的基础网络设备详解</a><br></div>» <a href="http://kb.cnblogs.com/" target="_blank">更多知识库文章...</a></div></div></div>
+<script type="text/javascript">
+var enableGoogleAd = true;
+var googletag = googletag || {};
+googletag.cmd = googletag.cmd || [];
+fixPostBodyFormat();
+loadAdUnderPost();
+</script>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+loadBlogSignature();
+LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate);
+GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+</script>
+<script type="text/javascript">
+    $.ajax({ url: 'http://counter.cnblogs.com/blog/post/' + cb_entryId, type: 'get', dataType: 'script', cache: true });
+</script>
+</div>
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+<!--done-->
+<div class="newsItem">
+<h3 class="catListTitle">公告</h3>
+	<div id="blog-news"><div id="profile_block">昵称：<a href="http://home.cnblogs.com/u/samchen2009/">漫天尘沙</a><br>园龄：<a href="http://home.cnblogs.com/u/samchen2009/" title="入园时间：2013-09-01">5个月</a><br>粉丝：<a href="http://home.cnblogs.com/u/samchen2009/followers/">21</a><br>关注：<a href="http://home.cnblogs.com/u/samchen2009/followees/">0</a><div id="p_b_follow"><a href="javascript:void(0);" onclick="cnblogs.UserManager.FollowBlogger(&#39;091ba064-b412-e311-8d02-90b11c0b17d6&#39;)">+加关注</a></div></div></div><script type="text/javascript">loadBlogNews();</script>
+</div>
+
+			<div id="blog-calendar" style=""><table id="blogCalendar" class="Cal" cellspacing="0" cellpadding="0" title="日历">
+	<tbody><tr><td colspan="7"><table class="CalTitle" cellspacing="0">
+		<tbody><tr><td class="CalNextPrev"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2014/01/01&#39;);return false;">&lt;</a></td><td align="center">2014年2月</td><td class="CalNextPrev" align="right"><a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2014/03/01&#39;);return false;">&gt;</a></td></tr>
+	</tbody></table></td></tr><tr><th class="CalDayHeader" align="center" abbr="日" scope="col">日</th><th class="CalDayHeader" align="center" abbr="一" scope="col">一</th><th class="CalDayHeader" align="center" abbr="二" scope="col">二</th><th class="CalDayHeader" align="center" abbr="三" scope="col">三</th><th class="CalDayHeader" align="center" abbr="四" scope="col">四</th><th class="CalDayHeader" align="center" abbr="五" scope="col">五</th><th class="CalDayHeader" align="center" abbr="六" scope="col">六</th></tr><tr><td class="CalOtherMonthDay" align="center">26</td><td class="CalOtherMonthDay" align="center">27</td><td class="CalOtherMonthDay" align="center">28</td><td class="CalOtherMonthDay" align="center">29</td><td class="CalOtherMonthDay" align="center">30</td><td class="CalOtherMonthDay" align="center">31</td><td class="CalWeekendDay" align="center">1</td></tr><tr><td class="CalWeekendDay" align="center">2</td><td align="center">3</td><td align="center">4</td><td align="center">5</td><td align="center">6</td><td align="center">7</td><td class="CalWeekendDay" align="center">8</td></tr><tr><td class="CalWeekendDay" align="center">9</td><td align="center">10</td><td align="center">11</td><td align="center">12</td><td align="center">13</td><td align="center">14</td><td class="CalWeekendDay" align="center">15</td></tr><tr><td class="CalTodayDay" align="center">16</td><td align="center">17</td><td align="center">18</td><td align="center">19</td><td align="center">20</td><td align="center">21</td><td class="CalWeekendDay" align="center">22</td></tr><tr><td class="CalWeekendDay" align="center">23</td><td align="center">24</td><td align="center">25</td><td align="center">26</td><td align="center">27</td><td align="center">28</td><td class="CalOtherMonthDay" align="center">1</td></tr><tr><td class="CalOtherMonthDay" align="center">2</td><td class="CalOtherMonthDay" align="center">3</td><td class="CalOtherMonthDay" align="center">4</td><td class="CalOtherMonthDay" align="center">5</td><td class="CalOtherMonthDay" align="center">6</td><td class="CalOtherMonthDay" align="center">7</td><td class="CalOtherMonthDay" align="center">8</td></tr>
+</tbody></table></div><script type="text/javascript">loadBlogDefaultCalendar();</script>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn">
+
+<div class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="widget_my_zzk" class="div_my_zzk"><input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk"></div>
+<div id="widget_my_google" class="div_my_zzk"><input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk"></div>
+</div>
+
+
+<div class="catListLink">
+<h3 class="catListTitle">常用链接</h3>
+<ul>
+
+		<li><a id="ctl01_rptMainLinks_lnkLinkItem_0" href="http://www.cnblogs.com/samchen2009/p/">我的随笔</a></li>
+	
+		<li><a id="ctl01_rptMainLinks_lnkLinkItem_1" href="http://www.cnblogs.com/samchen2009/MyComments.html">我的评论</a></li>
+	
+		<li><a id="ctl01_rptMainLinks_lnkLinkItem_2" title="我发表过评论的随笔" href="http://www.cnblogs.com/samchen2009/OtherPosts.html">我的参与</a></li>
+	
+		<li><a id="ctl01_rptMainLinks_lnkLinkItem_3" href="http://www.cnblogs.com/samchen2009/RecentComments.html">最新评论</a></li>
+	
+		<li><a id="ctl01_rptMainLinks_lnkLinkItem_4" href="http://www.cnblogs.com/samchen2009/tag/">我的标签</a></li>
+	
+<li><a id="itemListLink" onclick="this.blur();WarpClass(&#39;itemListLink&#39;, &#39;itemListLin_con&#39;);return false;" href="http://www.cnblogs.com/samchen2009/p/3368158.html#">更多链接</a></li>
+</ul>
+<div id="itemListLin_con" style="display:none;">
+<ul>
+
+</ul>
+</div>
+</div>
+<div class="catListTag">
+<h3 class="catListTitle">我的标签</h3>
+<ul>
+<li><a href="http://www.cnblogs.com/samchen2009/tag/Android/">Android</a>(8)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Framework/">Framework</a>(4)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Handler/">Handler</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Init/">Init</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Input%20Dispatcher/">Input Dispatcher</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Input%20Manager%20Service/">Input Manager Service</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Input%20reader/">Input reader</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/InputManager/">InputManager</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Key%20processing/">Key processing</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/Looper/">Looper</a>(1)</li><li><a href="http://www.cnblogs.com/samchen2009/tag/">更多</a></li>
+</ul>
+</div>
+<div class="catListPostCategory">
+<h3 class="catListTitle">随笔分类<span style="font-size:11px;font-weight:normal">(11)</span></h3>
+
+<ul>
+
+<li><a id="ctl03_CatList_LinkList_0_Link_0" href="http://www.cnblogs.com/samchen2009/category/524174.html">Ruby 学算法</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_0_Link_1" href="http://www.cnblogs.com/samchen2009/category/530192.html">读书笔记(1)</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_0_Link_2" href="http://www.cnblogs.com/samchen2009/category/524175.html">软件开发那点事</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_0_Link_3" href="http://www.cnblogs.com/samchen2009/category/524173.html">图解Android 系列(10)</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_0_Link_4" href="http://www.cnblogs.com/samchen2009/category/530160.html">虚拟化</a> </li>
+
+</ul>
+
+</div>
+
+<div class="catListPostArchive">
+<h3 class="catListTitle">随笔档案<span style="font-size:11px;font-weight:normal">(9)</span></h3>
+
+<ul>
+
+<li><a id="ctl03_CatList_LinkList_1_Link_0" href="http://www.cnblogs.com/samchen2009/archive/2013/11.html">2013年11月 (2)</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_1_Link_1" href="http://www.cnblogs.com/samchen2009/archive/2013/10.html">2013年10月 (5)</a> </li>
+
+<li><a id="ctl03_CatList_LinkList_1_Link_2" href="http://www.cnblogs.com/samchen2009/archive/2013/09.html">2013年9月 (2)</a> </li>
+
+</ul>
+
+</div>
+
+
+<div class="catListBlogRank">
+<h3 class="catListTitle">积分与排名</h3>
+<ul>
+	<li class="liScore">
+		积分 -	8282
+	</li>
+	<li class="liRank">
+		排名 -	14836
+	</li>
+</ul>
+</div>
+
+
+
+<div class="catListComment">
+<h3 class="catListTitle">最新评论<a id="_266643a_RSSHyperlink1" title="RSS订阅最最新评论" href="http://www.cnblogs.com/samchen2009/CommentsRSS.aspx"><img title="RSS订阅最最新评论" src="./Android_input_system/xml.gif" alt=""></a></h3>
+
+	<div id="RecentCommentsBlock"><ul>
+    <li class="recent_comment_title"><a href="http://www.cnblogs.com/samchen2009/p/3364327.html#2873574">1. Re:图解Android - Android GUI 系统 (1) - 概论</a></li>
+    <li class="recent_comment_body"><a href="http://www.cnblogs.com/samchen2009/p/3368158.html#2845114" title="查看所回复的评论" onclick="commentManager.renderComments(0,50,2845114);">@</a>lee_3do<br>兄台，对安卓的显示原理了解的如何了呀？</li>
+    <li class="recent_comment_author">--boyongwuren</li>
+    <li class="recent_comment_title"><a href="http://www.cnblogs.com/samchen2009/p/3364327.html#2873573">2. Re:图解Android - Android GUI 系统 (1) - 概论</a></li>
+    <li class="recent_comment_body">很不错！这么深入的东西很少有人研究。<br>分享出来的就越少了。<br>不过写的还是有点模糊，有些概念没有懂。<br>怎么联系楼主您呢？想请教些问题。<br>谢谢楼主分享！！！</li>
+    <li class="recent_comment_author">--boyongwuren</li>
+    <li class="recent_comment_title"><a href="http://www.cnblogs.com/samchen2009/p/3316001.html#2870820">3. Re:图解Android - Binder 和 Service</a></li>
+    <li class="recent_comment_body">感谢楼主，看后很受教。但能否再多讲一下Binder中回调的实现。例如：MediaPlayer作为MediaPlayerService的Client，在调用其IPC接口create时，会将this作为IMediaPlayerClient的引用传递给Server。当MediaPlayerService有通知时，会根据此引用找到对应的MediaPlayer进程，调用其提供的notify接口，此时应该Me...</li>
+    <li class="recent_comment_author">--suchangyu</li>
+    <li class="recent_comment_title"><a href="http://www.cnblogs.com/samchen2009/p/3316001.html#2862626">4. Re:图解Android - Binder 和 Service</a></li>
+    <li class="recent_comment_body">看见类图就注册了个账号，回复一把，结合老罗的书看，更加清晰，牛人</li>
+    <li class="recent_comment_author">--mahahadm</li>
+    <li class="recent_comment_title"><a href="http://www.cnblogs.com/samchen2009/p/3364327.html#2850307">5. Re:图解Android - Android GUI 系统 (1) - 概论</a></li>
+    <li class="recent_comment_body">博主你好，我见你后面的系列文章里面有一个关于多屏显示的标题，但是连接是空的，是否有在对这方面进行研究？最近刚好遇到了多屏显示的问题，想跟你请教下。</li>
+    <li class="recent_comment_author">--walle_chen</li>
+</ul>
+</div>
+</div>
+
+<div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock"><ul><li><a href="http://www.cnblogs.com/samchen2009/p/3367496.html">1. 图解Android - Android GUI 系统 (2) -  窗口管理 (View, Canvas, Window Manager)(1934)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3316001.html">2. 图解Android - Binder 和 Service(1724)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3294713.html">3. 图解Android - Zygote, System Server 启动分析(1545)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3364327.html">4. 图解Android - Android GUI 系统 (1) - 概论(1426)</a></li><li><a href="./Android_input_system/图解Android的input系统.htm">5. 图解Android - Android GUI 系统 (5) - Android的Event Input System(1100)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3315999.html">6. 图解Android - 如何看Android的UML 图？(763)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3315993.html">7. 图解Android - System Service 概论 和 Android GUI 系统(415)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3316004.html">8. 图解Android - Looper, Handler 和 MessageQueue(180)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3404897.html">9. 推荐书单(97)</a></li></ul></div>
+</div>
+
+<div class="catListFeedback">
+<h3 class="catListTitle">评论排行榜</h3>
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="./Android_input_system/图解Android的input系统.htm">1. 图解Android - Android GUI 系统 (5) - Android的Event Input System(6)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3294713.html">2. 图解Android - Zygote, System Server 启动分析(4)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3316001.html">3. 图解Android - Binder 和 Service(4)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3367496.html">4. 图解Android - Android GUI 系统 (2) -  窗口管理 (View, Canvas, Window Manager)(4)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3364327.html">5. 图解Android - Android GUI 系统 (1) - 概论(4)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3404897.html">6. 推荐书单(0)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3315993.html">7. 图解Android - System Service 概论 和 Android GUI 系统(0)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3316004.html">8. 图解Android - Looper, Handler 和 MessageQueue(0)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3315999.html">9. 图解Android - 如何看Android的UML 图？(0)</a></li></ul></div>
+</div>
+
+<div class="catListView">
+<h3 class="catListTitle">推荐排行榜</h3>
+<div id="TopDiggPostsBlock"><ul><li><a href="http://www.cnblogs.com/samchen2009/p/3316001.html">1. 图解Android - Binder 和 Service(4)</a></li><li><a href="./Android_input_system/图解Android的input系统.htm">2. 图解Android - Android GUI 系统 (5) - Android的Event Input System(2)</a></li><li><a href="http://www.cnblogs.com/samchen2009/p/3367496.html">3. 图解Android - Android GUI 系统 (2) -  窗口管理 (View, Canvas, Window Manager)(1)</a></li></ul></div>
+</div></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright ©2014 漫天尘沙
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+<iframe id="google_osd_static_frame_7447367613203" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;"></iframe></body></html>
