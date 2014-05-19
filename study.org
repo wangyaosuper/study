@@ -7574,25 +7574,25 @@ Android为Java程序提供了方便的内存泄露信息和工具（如MAT），
 代码原理分析
 我们可以使用adb shell setprop libc.debug.malloc 1来设置内存的调试等级（debug_level），更详细的等级解释见文件bionic/libc/bionic/malloc_debug_common.c中的注释：
 /* Handle to shared library where actual memory allocation is implemented.
-* This library is loaded and memory allocation calls are redirected there
-* when libc.debug.malloc environment variable contains value other than
-* zero:
-* 1 – For memory leak detections.
-* 5 – For filling allocated / freed memory with patterns defined by
-* CHK_SENTINEL_VALUE, and CHK_FILL_FREE macros.
-* 10 – For adding pre-, and post- allocation stubs in order to detect
-* buffer overruns.
-* Note that emulator’s memory allocation instrumentation is not controlled by
-* libc.debug.malloc value, but rather by emulator, started with -memcheck
-* option. Note also, that if emulator has started with -memcheck option,
-* emulator’s instrumented memory allocation will take over value saved in
-* libc.debug.malloc. In other words, if emulator has started with -memcheck
-* option, libc.debug.malloc value is ignored.
-* Actual functionality for debug levels 1-10 is implemented in
+ This library is loaded and memory allocation calls are redirected there
+ when libc.debug.malloc environment variable contains value other than
+ zero:
+ 1 – For memory leak detections.
+ 5 – For filling allocated / freed memory with patterns defined by
+ CHK_SENTINEL_VALUE, and CHK_FILL_FREE macros.
+ 10 – For adding pre-, and post- allocation stubs in order to detect
+ buffer overruns.
+ Note that emulator’s memory allocation instrumentation is not controlled by
+ libc.debug.malloc value, but rather by emulator, started with -memcheck
+ option. Note also, that if emulator has started with -memcheck option,
+ emulator’s instrumented memory allocation will take over value saved in
+ libc.debug.malloc. In other words, if emulator has started with -memcheck
+ option, libc.debug.malloc value is ignored.
+ Actual functionality for debug levels 1-10 is implemented in
 
-* libc_malloc_debug_leak.so, while functionality for emultor’s instrumented
-* allocations is implemented in libc_malloc_debug_qemu.so and can be run inside
-* the emulator only.
+ libc_malloc_debug_leak.so, while functionality for emultor’s instrumented
+ allocations is implemented in libc_malloc_debug_qemu.so and can be run inside
+ the emulator only.
 */
 对于不同的调试等级，内存分配管理函数操作句柄将指向不同的内存分配管理函数。这样，内存的分配和释放，在不同的的调试等级下，将使用不同的函数版本。
 详细过程如下： bbs.yuucn.com 全球顶尖IT精英加盟我们，专业为您解决问题
@@ -7630,6 +7630,7 @@ i9100原声版本是Android2.3版本
 出现trebuchet应用不断崩溃问题，无法进入Launcher
 解决方法，在APP设置中，将trebuchet应用进行数据清理，重启，ok就好了。
 Nice，我的i9100用上了目前世界上最新版本的手机操作系统了，老树逢春，梅开二度啊。
+
 
 * network
 ** emule和bt协议
