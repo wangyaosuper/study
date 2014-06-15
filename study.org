@@ -10523,5 +10523,5 @@ http://www.lunarpages.com/web-hosting/basic-hosting/
 ** 我的主页
 *** 3v
 我的主页地址   wangyaosuper.free3v.net
-管理方法 ftp://wangyaosuper.free3v.net      wyao123
+管理方法 ftp://wangyaosuper.free3v.net      密码是wyao123
 主页  www.3v.cm   用户名wangyaosuper  密码不记得了
