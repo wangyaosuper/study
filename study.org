@@ -847,6 +847,13 @@ try-expand-whole-kill
 (setq semanticdb-default-save-directory "~/.emacs.d/")
 
 
+**** 如何禁用vc-git
+(remove-hook 'find-file-hooks 'vc-find-file-hook)
+you might need a (require 'vc) before the above line to get the timing right. Or perhaps wrap it like so:
+
+(eval-after-load "vc" '(remove-hook 'find-file-hooks 'vc-find-file-hook))
+to get the timing right.
+
 
 ** virsual svn
 **** 备份和恢复
@@ -7267,6 +7274,8 @@ get_vm_area 就是获取一个vmalloc area
 调用一次vmalloc其实就是递归函数，通过vmalloc反复递归，vmalloc通过get_vm_area()获取vmalloc area，通过kmalloc和alloc_page来申请线性映射的物理页，然后再调用map_vm_area()函数来对这个vmalloc area进行页表更新。
 也就是说vmalloc中将获取到的vmalloc area和物理地址联系起来的函数是map_vm_area()
 
+**** page_table
+arch/arm/include/asm/pgtable.h:   the macro/function calc pte/pmt
 *** 中断
 中断可以从plat_irq_dispatch()这个函数入口，
 然后是do_IRQ（）
@@ -7689,6 +7698,18 @@ ViewRootImpl对应一个Surface，ViewRootImpl会递归的调用它下面的所�
 应用中每一个Activity都拥有一个ViewRootImpl，在进程启动的时候由ActivityThread触发，将ViewRootImpl添加到WindowManagerGlobal的。
 ViewRootImpl下面的ViewGroup和View是递归的被addView至他们的父亲View，这个addView的过程通常是在inflate过程中完成的。
 当然在运行期间，也有可能会发生动态的addView，比如动态的添加一个控件等等。
+**** inflate,measure,layout
+http://825288003.iteye.com/blog/1770602
+Activity.setContentView()
+  PhoneWindow.setContentView()
+    LayoutInflager.inflate()
+      LayoutInflager.rInflate()
+        LayoutInflager.parseInclude()  // 创建View,add View
+	  view.setLayoutParams()
+          ViewGroup.addView()
+	  createViewFromTag()
+            createView(attrs)
+              View.View(attrs)  // View的属性
 
 
 ** 刷机经验
