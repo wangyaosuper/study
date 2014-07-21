@@ -7765,6 +7765,8 @@ Resolve the system classes:
 The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
     dvmFindClassByName()
         dvmFindClassNoInit()
+            findClassFromLoaderNoInit
+                
             dvmFindSystemClassNoInit()
                 findClassNoInit()
                     searchBootPathForClass()  // no DexDvm, means the class to find is the system class, search in Boot Path. Iterate the boot path .jar and .dex files
@@ -7774,7 +7776,7 @@ The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
                         dexGetClassData() // There is offset in the ClassDef info, we can locate the encodedata of the class
                         loadClassFromDex0()// resolve the fields methods interface and so on from encodeddata
                     dvmAddClassToHash()  // put the class to the Hash table, next time we can use dvmLookupClass() to find it
-                    dvmLinkClass()
+                    dvmLinkClass() // This converts symbolic references into pointers.
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
