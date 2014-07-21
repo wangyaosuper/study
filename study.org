@@ -7740,7 +7740,7 @@ main() // the Entry of the tool , dalvik/dexopt/OptMain.cpp
                         optimizeMethod()   // Optimize a method, analyse the source of the method, rewrite the invoke and put operation, still in Optimize.cpp
                             rewriteVirtualInvoke(),rewriteExecuteInlineRange(),rewriteExecuteInline()   // Optimize a invoke, still in optimize.cpp
                                 dvmOptResolveMethod() // resolve the methord invoked, still in optimize.cpp
-                                dvmOptResolveClass()
+                                    dvmOptResolveClass()
 2. head
 There is a head in the beginning of dex file. Check the dexFileParse(), pDexFile->pOptHeader, dexFileSetupBasicPointers()
     pDexFile->pStringIds = (const DexStringId*) (data + pHeader->stringIdsOff);
@@ -7765,8 +7765,6 @@ Resolve the system classes:
 The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
     dvmFindClassByName()
         dvmFindClassNoInit()
-            findClassFromLoaderNoInit
-                
             dvmFindSystemClassNoInit()
                 findClassNoInit()
                     searchBootPathForClass()  // no DexDvm, means the class to find is the system class, search in Boot Path. Iterate the boot path .jar and .dex files
