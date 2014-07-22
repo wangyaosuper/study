@@ -991,6 +991,14 @@ github怎么做到多个账号维护一个git仓呢？
 这样自己的主页下面也会有这个git仓了，然后在自己的git仓中进行任意修改，修改完了，点击pull request，就会把修改的内容上交到主人那里
 
 
+*** git的一些错误
+**** The certificate of the remote verify failed by the local system
+The certificate of the remote verify failed by the local system, the git will display as below. 
+There is a easy way, just export GIT_SSL_NO_VERIFY=1, to resolve this problem.
+Cloning into art...
+error: SSL certificate problem, verify that the CA cert is OK. Details:
+error:14090086:SSL routines:SSL3_GET_SERVER_CERTIFICATE:certificate verify failed while accessing https://android.googlesource.com/platform/art/info/refs
+
 
 * program
 ** python
