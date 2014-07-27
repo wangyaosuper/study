@@ -7701,15 +7701,55 @@ ViewRootImpl下面的ViewGroup和View是递归的被addView至他们的父亲Vie
 **** inflate,measure,layout
 http://825288003.iteye.com/blog/1770602
 Activity.setContentView()
-  PhoneWindow.setContentView()
-    LayoutInflager.inflate()
-      LayoutInflager.rInflate()
-        LayoutInflager.parseInclude()  // 创建View,add View
-	  view.setLayoutParams()
-          ViewGroup.addView()
-	  createViewFromTag()
-            createView(attrs)
-              View.View(attrs)  // View的属性
+    PhoneWindow.setContentView()
+        LayoutInflager.inflate()
+            LayoutInflager.rInflate()
+                LayoutInflager.parseInclude()    // 创建View,add View
+            view.setLayoutParams()
+                    ViewGroup.addView()
+            createViewFromTag()
+                        createView(attrs)
+                            View.View(attrs)    // View的属性
+PhoneWindow.measure()
+PhoneWindow.onMeasure() // calc the heigh and wigth of the view
+ViewRootImpl.doTraversal()
+    ViewRootImpl.performTranversals()
+        ViewRootImpl.performMeasure()
+	    View.performMeasure()
+        ViewRootImpl.performLayout()
+            ViewRootImpl.measureHierarchy()
+            View.layout(left, top, right, bottom)
+                View(specify view,as LinearLayout).onLayout()
+                    LinearLayout.layoutVertical()
+                        LinearLayout.setChildFrame()
+                            View(childs).layout(left, top, right, bottom)
+                    LinearLayout.layoutHorizontal()
+	    View.requestLayout()
+
+*** vm
+**** dexopt
+1. Main Flow
+main() // the Entry of the tool , dalvik/dexopt/OptMain.cpp
+    fromDex()  // process dex, it is easy to understand, will don't want to check the process of zip , this function is still in OptMain.cpp
+        dvmContinueOptimization() // dalvik/vm/analysis/DexPrepare.cpp
+            rewriteDex()  // optimize the dex, still in DexPrepare.cpp
+                dexSwapAndVerify()   // swap byte order, still in DexPrepare.cpp
+                dvmDexFileOpenPartial(),dexCreateClassLookup(),loadAllClasses()   // create the DvmDex, load the class , still in DexPrepare.cpp
+                verifyAndOptimizeClass()   // still in DexPrepare.cpp
+                    dvmOptimizeClass(ClassObject* clazz, bool essentialOnly) // Optimize a class, dalvik/vm/analysis/Optimize.cpp
+                        optimizeMethod()   // Optimize a method, analyse the source of the method, rewrite the invoke and put operation, still in Optimize.cpp
+                            rewriteVirtualInvoke(),rewriteExecuteInlineRange(),rewriteExecuteInline()   // Optimize a invoke, still in optimize.cpp
+                                dvmOptResolveMethod() // resolve the methord invoked, still in optimize.cpp
+                                dvmOptResolveClass()
+2. head
+There is a head in the beginning of dex file. Check the dexFileParse(), pDexFile->pOptHeader, dexFileSetupBasicPointers()
+    pDexFile->pStringIds = (const DexStringId*) (data + pHeader->stringIdsOff);
+    pDexFile->pTypeIds = (const DexTypeId*) (data + pHeader->typeIdsOff);
+    pDexFile->pFieldIds = (const DexFieldId*) (data + pHeader->fieldIdsOff);
+    pDexFile->pMethodIds = (const DexMethodId*) (data + pHeader->methodIdsOff);
+    pDexFile->pProtoIds = (const DexProtoId*) (data + pHeader->protoIdsOff);
+    pDexFile->pClassDefs = (const DexClassDef*) (data + pHeader->classDefsOff);
+    pDexFile->pLinkData = (const DexLink*) (data + pHeader->linkOff);
 
 
 ** 刷机经验
