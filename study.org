@@ -7751,6 +7751,26 @@ There is a head in the beginning of dex file. Check the dexFileParse(), pDexFile
     pDexFile->pClassDefs = (const DexClassDef*) (data + pHeader->classDefsOff);
     pDexFile->pLinkData = (const DexLink*) (data + pHeader->linkOff);
 
+The dexFileParse() function will parse the header in the Dex file, and put the value in the pDexFile structure.
+
+3. Resolve Class and methord
+The process of resolve class and methord associates with the optimize process.
+Check the function named dvmFindClassNoInit() used in the dvmOptResolveClass.
+    The dexopt using libcore/libdvm/src/main/java/java/lang/ClassLoader.java (calling dalvik/vm/native/java_lang_VMClassLoader.cpp) to resolve Class.
+
+4. LoadClass
+Parse the dex file:
+The rewriteDex() invokes dexCreateClassLookup() to create the pDvmDex->pDexFile->pClassLookup, which indexes the ClassDef pointers which stored in DexFile->pClassDefs
+Resolve the system classes:
+The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
+    dvmFindClassByName()
+        dvmFindClassNoInit()
+            dvmFindSystemClassNoInit()
+                findClassNoInit()
+                    searchBootPathForClass()  // no DexDvm, means the class to find is the system class, search in Boot Path. Iterate the boot path .jar and .dex files
+                        dexFindClass() // here to find the ClassDef by using dexFile->pClassLookup,
+                    dexFindClass()  // There is DexDvm, means the class is in the dex file we are optimizing, so dexFindClass directly.
+                loadClassFromDex
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
