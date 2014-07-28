@@ -1,0 +1,4 @@
+* dalvik and art
+** What is dvmLinearAlloc, how does dvmLinearAlloc manage the memory itself ?
+
+** what is the function of the dvmLinkClass()
