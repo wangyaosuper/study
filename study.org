@@ -7784,6 +7784,25 @@ The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
                     dvmAddClassToHash()  // put the class to the Hash table, next time we can use dvmLookupClass() to find it
                     dvmLinkClass() // This converts symbolic references into pointers.
 
+**** art_runtime
+dalvikvm.cc:  dalvikvm()
+    JNI_CreateJavaVM
+        runtime::start()
+            InitNativeMethods()
+            InitThreadGroups()
+            if(__is__zygote) InitZygote()
+            if(!__is__zygote) DidForkFromZygote()
+            StartDaemonThreads()
+            system_class_loader_ = CreateSystemClassLoader()
+            finished_starting_ = true
+            StartProfiler()
+	    return env and vm
+    InvokeMain(env, arg)
+        klazz = env->FindClass()
+        method = env->GetStaticMethodID(klass.get(), "main", "([Ljava/lang/String;)V");
+        env->CallStaticVoidMethod(klazz, method)
+
+
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
 2014年4月12日，我经过一个下午和一个晚上的奋战，我把一台闲置的SAMUNGE i9100刷成了CyanogenMod10.1.3稳定版本(对应Android4.0版本）。
