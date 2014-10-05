@@ -7785,7 +7785,7 @@ The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
                     dvmLinkClass() // This converts symbolic references into pointers.
 
 **** art_runtime
-dalvikvm.cc:  dalvikvm()
+dalvikvm()    (in dalvikvm.cc)
     JNI_CreateJavaVM
         runtime::start()
             InitNativeMethods()
@@ -7799,9 +7799,15 @@ dalvikvm.cc:  dalvikvm()
 	    return env and vm
     InvokeMain(env, arg)
         klazz = env->FindClass()
-        method = env->GetStaticMethodID(klass.get(), "main", "([Ljava/lang/String;)V");
+        method = env->GetStaticMethodID(klass.get(), "main", "([Ljava/lang/String;)V");       ( ** method is mid ** )
         env->CallStaticVoidMethod(klazz, method)
-
+            InvokeWithVarArgs(soa, obj=null, args)    (in reflaction.cc, because static method invoking, obj=null)
+                InvokeWithArgArray(soa, soa.DecodeMethod(method), arg_array, &result, shorty)      (in reflaction.cc)
+                    method->Invoke(soa.Self(), args, arg_array->GetNumBytes(), result, shorty)     (in mirror/art_method.cc)
+                        art_quick_invoke_stub(method, args, size, thread=self, result, shorty)     (in arch/xx/quick_entrypoints_xx.S)
+                        (or art_static_invoke_stub, art_portable_invoke_stub)
+            
+                
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
