@@ -7784,7 +7784,7 @@ The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
                     dvmAddClassToHash()  // put the class to the Hash table, next time we can use dvmLookupClass() to find it
                     dvmLinkClass() // This converts symbolic references into pointers.
 
-**** art_runtime
+**** art_runtime start up
 dalvikvm()    (in dalvikvm.cc)
     JNI_CreateJavaVM
         runtime::start()
@@ -7801,13 +7801,32 @@ dalvikvm()    (in dalvikvm.cc)
         klazz = env->FindClass()
         method = env->GetStaticMethodID(klass.get(), "main", "([Ljava/lang/String;)V");       ( ** method is mid ** )
         env->CallStaticVoidMethod(klazz, method)
-            InvokeWithVarArgs(soa, obj=null, args)    (in reflaction.cc, because static method invoking, obj=null)
+            InvokeWithVarArgs(soa, obj=null, mid, args)    (in reflaction.cc, because static method invoking, obj=null)
                 InvokeWithArgArray(soa, soa.DecodeMethod(method), arg_array, &result, shorty)      (in reflaction.cc)
                     method->Invoke(soa.Self(), args, arg_array->GetNumBytes(), result, shorty)     (in mirror/art_method.cc)
                         art_quick_invoke_stub(method, args, size, thread=self, result, shorty)     (in arch/xx/quick_entrypoints_xx.S)
                         (or art_static_invoke_stub, art_portable_invoke_stub)
             
-                
+**** art_time invoke a methord
+InvokeVirtualOrInterfaceWithVarArgs(soa, obj, mid, args)      (in reflaction.cc)
+    receiver = soa.Decode<mirror::Object*>(obj)
+    FindVirtualMethod(receiver, soa.DecodeMethod(mid))     (in reflaction.cc)
+        receiver->GetClass()->FindVirtualMethodForVirtualOrInterface(method)   (in mirror/class-inl.h, in the class Class::)
+            FindVirtualMethodForInterface(method)
+            or FindVirtualMethodForVirtual(method)
+    InvokeWithArgArray(soa, method, &arg_array, &result, shorty)    (the things in this function is described above)
+
+**** art_time iftable
+***** how to get if table
+Actually the IfTable is not in the object Class, it is on the heap.
+The object Class use a field named iftable_ as the reference of the IfTable.
+(in mirro/class.h and mirro/class-inl.h)
+inline IfTable* Class::GetIfTable() {
+  return GetFieldObject<IfTable>(OFFSET_OF_OBJECT_MEMBER(Class, iftable_));
+}
+inline void Class::SetIfTable(IfTable* new_iftable) {
+  SetFieldObject<false>(OFFSET_OF_OBJECT_MEMBER(Class, iftable_), new_iftable);
+}
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
