@@ -7824,9 +7824,15 @@ The object Class use a field named iftable_ as the reference of the IfTable.
 inline IfTable* Class::GetIfTable() {
   return GetFieldObject<IfTable>(OFFSET_OF_OBJECT_MEMBER(Class, iftable_));
 }
+***** how to set if table
 inline void Class::SetIfTable(IfTable* new_iftable) {
   SetFieldObject<false>(OFFSET_OF_OBJECT_MEMBER(Class, iftable_), new_iftable);
 }
+***** TODO when to set if table
+ClassLinker::CreateArrayClass()         (in class_linker.cc)      
+ClassLinker::LinkInterfaceMethods()     (in class_linker.cc)
+
+why there is CreateArrayClass need to Class::SetIfTable, Creating a normal Class do not need.
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
