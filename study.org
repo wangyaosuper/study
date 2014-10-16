@@ -10600,6 +10600,13 @@ set_except_vector(10, rdhwr_noopt ? handle_ri :
   (cpu_has_vtag_icache ?
      handle_ri_rdhwr_vivt : handle_ri_rdhwr));
 
+** ARM
+*** Categorical
+ARMv7 - A  , normal
+ARMv7 - R  , realtime
+ARMv7 - M  , micro
+ARMv8 - A  , normal, 64bits
+
 
 * Other
 ** 服务器空间
