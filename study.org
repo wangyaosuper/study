@@ -7566,6 +7566,7 @@ mount -t devpts devpts /dev/pts
 *** 好的网站
 http://blog.csdn.net/myarrow/article
 http://www.cnblogs.com/samchen2009/p/3368158.html     (超赞）
+
 *** input
 **** 基本概念
 1. EventHub
@@ -7834,6 +7835,30 @@ ClassLinker::LinkInterfaceMethods()     (in class_linker.cc)
 
 why there is CreateArrayClass need to Class::SetIfTable, Creating a normal Class do not need.
 
+*** start up
+**** SystemServer
+The code of SystemServer is frameworks/base/services/java/com/android/server/SystemServer.java
+SystemServer.java do start up at main(), for it is a indepent java process.
+The main() function will start each native services by the function nativeInit().
+The main() function will start a thread to start each java services.
+        ServerThread thr = new ServerThread();
+        thr.initAndLoop();
+
+*** PM installd
+**** Package Manager
+Package Manager connect to installd by socket.
+
+./services/java/com/android/server/pm/PackageManagerService.java
+./services/java/com/android/server/PackageManagerBackupAgent.java
+./core/java/android/content/pm/PackageManager.java
+
+**** installd
+
+
+The installd is here
+frameworks/native/cmds/installd
+
+
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
 2014年4月12日，我经过一个下午和一个晚上的奋战，我把一台闲置的SAMUNGE i9100刷成了CyanogenMod10.1.3稳定版本(对应Android4.0版本）。
@@ -7865,6 +7890,13 @@ i9100原声版本是Android2.3版本
 出现trebuchet应用不断崩溃问题，无法进入Launcher
 解决方法，在APP设置中，将trebuchet应用进行数据清理，重启，ok就好了。
 Nice，我的i9100用上了目前世界上最新版本的手机操作系统了，老树逢春，梅开二度啊。
+
+** source on the web
+*** mirror of the android.googlesource.com
+**** codeaurora.org
+http://www.codeaurora.org
+for example:
+git clone git://codeaurora.org/platform/frameworks/base -b aosp-new/master
 
 
 * network
