@@ -7844,7 +7844,23 @@ The main() function will start a thread to start each java services.
         ServerThread thr = new ServerThread();
         thr.initAndLoop();
 
-*** PM installd
+**** zygote startup & bootstrap dexopt
+When the Zygote is boot up by the app_process via init.rc.
+main()  // in app_main.c
+    AndroidRuntime::start()   // AppRuntime inherit from AndroidRuntime
+        AndroidRuntime::startVm()   // There are lots of VMopitions indicate here
+            JNI_CreateJavaVM()  // In the file java_vm_ext.cc
+                Runtime::Create()  // In the file runtime.cc
+                    Runtime::Init()
+                        gc::Heap::Heap()  // called by Runtime::Init via new gc::Heap
+                            space::ImageSpace::Create()
+                                GenerateImage() or RelocateImage()                   
+                                    PruneDexCache()  // The dalvik-cache folder will be pruned, if the image is regenerated.
+
+
+
+
+*** PM and Installd
 **** Package Manager
 Package Manager connect to installd by socket.
 
@@ -7852,8 +7868,19 @@ Package Manager connect to installd by socket.
 ./services/java/com/android/server/PackageManagerBackupAgent.java
 ./core/java/android/content/pm/PackageManager.java
 
-**** installd
+We called dexopt for both dexopt of dalvik and dex2art of art runtime.
 
+PackageManagerService.performBootDexOpt()  // Apps used in the 7 days for users go to dexopt. In PackageManagerService.java
+    PackageManagerService.performDexOptLI()
+        DexFile.isDexOptNeededInternal()    // This is a jni function, it is record to the DexFile_isDexOptNeededInternal()
+            DexFile_isDexOptNeededInternal()    // In art/runtime/native/dalvik_system_DexFile.cc
+                IsDexOptNeededForFile()     // In art/runtime/native/dalvik_system_DexFile.cc
+                    // In side the function, oat_dex_file = oat_file->GetOatDexFile() means get the dex_file partition in the oat file.
+
+
+                
+
+**** installd
 
 The installd is here
 frameworks/native/cmds/installd
