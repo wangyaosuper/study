@@ -7859,6 +7859,10 @@ main()  // in app_main.c
 
 
 
+*** ActivityManage
+**** How to start a Activity
+The Application info is resolved in this methord ActivityStackSupervisor.startActivityMayWait() in ActivityStackSupervisor.java
+ActivityStackSupervisor.startActivityMayWait() use resolveActivity() to get the application.info from PackageManagerService.
 
 *** PM and Installd
 **** Package Manager
@@ -7924,6 +7928,42 @@ Nice，我的i9100用上了目前世界上最新版本的手机操作系统了�
 http://www.codeaurora.org
 for example:
 git clone git://codeaurora.org/platform/frameworks/base -b aosp-new/master
+
+repo init -u git://codeaurora.org/platform/manifest.git -b aosp-new/master
+
+diff --git a/default.xml b/default.xml
+index f5dffb1..1d7cc92 100644
+--- a/default.xml
++++ b/default.xml
+@@ -2,9 +2,9 @@
+ <manifest>
+ 
+   <remote  name="aosp"
+-           fetch=".."
++           fetch="git://codeaurora.org/"
+            review="https://android-review.googlesource.com/" />
+-  <default revision="master"
++  <default revision="aosp-new/master"
+            remote="aosp"
+            sync-j="4" />
+ 
+@@ -116,7 +116,6 @@
+   <project path="external/esd" name="platform/external/esd" />
+   <project path="external/expat" name="platform/external/expat" groups="pdk" />
+   <project path="external/eyes-free" name="platform/external/eyes-free" />
+-  <project path="external/f2fs-tools" name="platform/external/f2fs-tools" />
++  <project path="external/f2fs-tools" name="platform/external/f2fs-tools" revision="kernel-f2fs-tools/master" />
+   <project path="external/fdlibm" name="platform/external/fdlibm" />
+   <project path="external/fio" name="platform/external/fio" />
+   <project path="external/flac" name="platform/external/flac" groups="pdk" />
+@@ -214,7 +213,6 @@
+   <project path="external/qemu" name="platform/external/qemu" />
+   <project path="external/qemu-pc-bios" name="platform/external/qemu-pc-bios" /
+   <project path="external/regex-re2" name="platform/external/regex-re2" />
+-  <project path="external/replicaisland" name="platform/external/replicaisland"
+   <project path="external/robolectric" name="platform/external/robolectric" />
+   <project path="external/safe-iop" name="platform/external/safe-iop" groups="p
+   <project path="external/scrypt" name="platform/external/scrypt" groups="pdk"
 
 
 * network
