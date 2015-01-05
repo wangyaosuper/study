@@ -7736,7 +7736,7 @@ ViewRootImpl.doTraversal()
 	    View.requestLayout()
 
 *** vm
-**** dexopt
+**** dalvik dexopt
 1. Main Flow
 main() // the Entry of the tool , dalvik/dexopt/OptMain.cpp
     fromDex()  // process dex, it is easy to understand, will don't want to check the process of zip , this function is still in OptMain.cpp
@@ -7835,6 +7835,30 @@ ClassLinker::LinkInterfaceMethods()     (in class_linker.cc)
 
 why there is CreateArrayClass need to Class::SetIfTable, Creating a normal Class do not need.
 
+**** GC
+***** what is GC Roots
+The so-called GC (Garbage Collector) roots are objects special for garbage collector. Garbage collector collects those objects that are not GC roots and are not accessible by references from GC roots.
+
+There are several kinds of GC roots. One object can belong to more than one kind of root. The root kinds are:
+
+Class - class loaded by system class loader. Such classes can never be unloaded. They can hold objects via static fields. Please note that classes loaded by custom class loaders are not roots, unless corresponding instances of java.lang.Class happen to be roots of other kind(s).
+
+Thread - live thread
+
+Stack Local - local variable or parameter of Java method
+
+JNI Local - local variable or parameter of JNI method
+
+JNI Global - global JNI reference
+
+Monitor Used - objects used as a monitor for synchronization
+
+Held by JVM - objects held from garbage collection by JVM for its purposes. Actually the list of such objects depends on JVM implementation. Possible known cases are: the system class loader, a few important exception classes which the JVM knows about, a few pre-allocated objects for exception handling, and custom class loaders when they are in the process of loading classes. Unfortunately, JVM provides absolutely no additional detail for such objects. Thus it is up to the analyst to decide to which case a certain "Held by JVM" belongs.
+
+**** boot.art
+Boot.art is an memory image contains all root objs.
+You can have a start up by reading the code of class named ImageDumper in art/oatdump/oatdump.cc.
+
 *** start up
 **** SystemServer
 The code of SystemServer is frameworks/base/services/java/com/android/server/SystemServer.java
@@ -7889,6 +7913,9 @@ PackageManagerService.performBootDexOpt()  // Apps used in the 7 days for users 
 The installd is here
 frameworks/native/cmds/installd
 
+** Emulator & qemu
+*** how to start emulator for Android
+./prebuilts/android-emulator/linux-x86_64/emulator64-x86 -sysdir ./out/target/product/generic_x86_64/ -data userdata.img -kernel ./prebuilts/qemu-kernel/x86_64/kernel-qemu -memory 2048 -partition-size 1000 -gpu off  &
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
