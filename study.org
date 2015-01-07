@@ -7890,7 +7890,13 @@ Held by JVM - objects held from garbage collection by JVM for its purposes. Actu
 
 **** boot.art
 Boot.art is an memory image contains all root objs.
+Dump:
 You can have a start up by reading the code of class named ImageDumper in art/oatdump/oatdump.cc.
+Generate:
+Check the code of the class ImageWriter in art/compiler/image_writer.h
+Load:
+Runtime::Create(RuntimeOptions&)
+The option item named -Ximage
 
 *** start up
 **** SystemServer
