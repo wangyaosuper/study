@@ -7785,7 +7785,7 @@ The Dalvik_java_lang_VMClassLoader_loadClass() invokes:
                     dvmAddClassToHash()  // put the class to the Hash table, next time we can use dvmLookupClass() to find it
                     dvmLinkClass() // This converts symbolic references into pointers.
 
-**** art_runtime start up
+**** art: start up
 dalvikvm()    (in dalvikvm.cc)
     JNI_CreateJavaVM
         runtime::start()
@@ -7808,7 +7808,8 @@ dalvikvm()    (in dalvikvm.cc)
                         art_quick_invoke_stub(method, args, size, thread=self, result, shorty)     (in arch/xx/quick_entrypoints_xx.S)
                         (or art_static_invoke_stub, art_portable_invoke_stub)
             
-**** art_time invoke a methord
+**** art: methord
+***** invoke a methord
 InvokeVirtualOrInterfaceWithVarArgs(soa, obj, mid, args)      (in reflaction.cc)
     receiver = soa.Decode<mirror::Object*>(obj)
     FindVirtualMethod(receiver, soa.DecodeMethod(mid))     (in reflaction.cc)
@@ -7817,7 +7818,39 @@ InvokeVirtualOrInterfaceWithVarArgs(soa, obj, mid, args)      (in reflaction.cc)
             or FindVirtualMethodForVirtual(method)
     InvokeWithArgArray(soa, method, &arg_array, &result, shorty)    (the things in this function is described above)
 
-**** art_time iftable
+**** art: thread
+***** dump thread stack
+The source of dump thread stack is in the art/runtime/thread.cc
+The class BuildInternalStackTraceVisitor is used to create the raw data information of the stack trace
+The methord Thread::CreateInternalStackTrace() will create a jobject contains the InternalStackTrace.
+We can dunp the stack trace in the native code like this(art/runtime/exception_test.cc):
+  jobject internal = thread->CreateInternalStackTrace<false>(soa);
+  ASSERT_TRUE(internal != nullptr);
+  jobjectArray ste_array = Thread::InternalStackTraceToStackTraceElementArray(soa, internal);
+  ASSERT_TRUE(ste_array != nullptr);
+  mirror::ObjectArray<mirror::StackTraceElement>* trace_array =
+      soa.Decode<mirror::ObjectArray<mirror::StackTraceElement>*>(ste_array);
+
+  ASSERT_TRUE(trace_array != nullptr);
+  ASSERT_TRUE(trace_array->Get(0) != nullptr);
+  EXPECT_STREQ("ExceptionHandle",
+               trace_array->Get(0)->GetDeclaringClass()->ToModifiedUtf8().c_str());
+  EXPECT_STREQ("ExceptionHandle.java",
+               trace_array->Get(0)->GetFileName()->ToModifiedUtf8().c_str());
+  EXPECT_STREQ("g", trace_array->Get(0)->GetMethodName()->ToModifiedUtf8().c_str());
+  EXPECT_EQ(37, trace_array->Get(0)->GetLineNumber());
+
+  ASSERT_TRUE(trace_array->Get(1) != nullptr);
+  EXPECT_STREQ("ExceptionHandle",
+               trace_array->Get(1)->GetDeclaringClass()->ToModifiedUtf8().c_str());
+  EXPECT_STREQ("ExceptionHandle.java",
+               trace_array->Get(1)->GetFileName()->ToModifiedUtf8().c_str());
+  EXPECT_STREQ("f", trace_array->Get(1)->GetMethodName()->ToModifiedUtf8().c_str());
+  EXPECT_EQ(22, trace_array->Get(1)->GetLineNumber());
+
+The first stack can be got by trace_array->Get(0), second one can be got by trace_array->Get(1), and so on.
+
+**** art: iftable
 ***** how to get if table
 Actually the IfTable is not in the object Class, it is on the heap.
 The object Class use a field named iftable_ as the reference of the IfTable.
@@ -7835,7 +7868,7 @@ ClassLinker::LinkInterfaceMethods()     (in class_linker.cc)
 
 why there is CreateArrayClass need to Class::SetIfTable, Creating a normal Class do not need.
 
-**** GC
+**** art: GC
 ***** what is GC Roots
 The so-called GC (Garbage Collector) roots are objects special for garbage collector. Garbage collector collects those objects that are not GC roots and are not accessible by references from GC roots.
 
@@ -7888,6 +7921,9 @@ main()  // in app_main.c
 The Application info is resolved in this methord ActivityStackSupervisor.startActivityMayWait() in ActivityStackSupervisor.java
 ActivityStackSupervisor.startActivityMayWait() use resolveActivity() to get the application.info from PackageManagerService.
 
+In ActivityManagerService.java, startProcessLocked() will start a new App process by sending message to Zygote, and recode the AppInfo in the mPidsSelfLocked.
+The child forked by Zygote will launch ActivityThread.main() first, and call the ActivitymanagerService.attachApplication() by binder. In the applicationAttach(), AMS can get the AppInfo from the mPidsSelfLocked by the caller-pid.
+And then AMS will call the ActivityThread.bindApplication() through binder, and send the appinfo to the ActivityThread of the App.
 *** PM and Installd
 **** Package Manager
 Package Manager connect to installd by socket.
