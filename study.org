@@ -7928,7 +7928,8 @@ The Application info is resolved in this methord ActivityStackSupervisor.startAc
 ActivityStackSupervisor.startActivityMayWait() use resolveActivity() to get the application.info from PackageManagerService.
 
 In ActivityManagerService.java, startProcessLocked() will start a new App process by sending message to Zygote, and recode the AppInfo in the mPidsSelfLocked.
-The child forked by Zygote will launch ActivityThread.main() first, and call the ActivitymanagerService.attachApplication() by binder. In the applicationAttach(), AMS can get the AppInfo from the mPidsSelfLocked by the caller-pid.
+The child forked by Zygote will launch ActivityThread.main() first, and call the ActivitymanagerService.attachApplication() by binder. In the applicationAttachLocked(), AMS can get the AppInfo from the mPidsSelfLocked by the caller-pid.
+In applicationAttachLocked(), AMS will also use ensurePackageDexOpt() to pre-dex-opt the APK.
 And then AMS will call the ActivityThread.bindApplication() through binder, and send the appinfo to the ActivityThread of the App.
 *** PM and Installd
 **** Package Manager
