@@ -7896,8 +7896,19 @@ Generate:
 Check the code of the class ImageWriter in art/compiler/image_writer.h
 Load:
 Runtime::Create(RuntimeOptions&)
+ImageSpace::Create()   in the art/runtime/gc/space/image_space.cc
 The option item named -Ximage
 
+**** BaseDexClassLoader
+BaseDexClassLoader.loadClass()
+    ClassLoader.loadClass()
+        BaseDexClassLoader.findClass()
+            DexPathList.findClass()
+                DexFile.loadClassBinaryName()
+                    DexFile.defineClass()
+                        DexFile_defineClassNative()  // in the dalvik_system_DexFile.cc
+                            DexFile::FindClassDef()  // art/runtime/dex_file.cc
+                            ....   // TODO
 *** start up
 **** SystemServer
 The code of SystemServer is frameworks/base/services/java/com/android/server/SystemServer.java
@@ -7931,6 +7942,23 @@ In ActivityManagerService.java, startProcessLocked() will start a new App proces
 The child forked by Zygote will launch ActivityThread.main() first, and call the ActivitymanagerService.attachApplication() by binder. In the applicationAttachLocked(), AMS can get the AppInfo from the mPidsSelfLocked by the caller-pid.
 In applicationAttachLocked(), AMS will also use ensurePackageDexOpt() to pre-dex-opt the APK.
 And then AMS will call the ActivityThread.bindApplication() through binder, and send the appinfo to the ActivityThread of the App.
+**** How do ActivityThread.bindApplication() load the APK
+ActivityThread.bindApplication()
+    ActivityThread.handleBindApplication()
+        data.info = getPackageInfoNoCheck(data.appInfo, data.compatInfo);   
+        // the data.info is typed of LoadedApk, which contain the class loader for the APK
+            getPackageInfo()
+                new LoadedApk()
+                    mClassLoader = ApplicationLoaders.getDefault().getClassLoader(zip, lib, mBaseClassLoader);
+                    // zip is string valued with the path of the zip files
+                    // lib is string valued with the path of the lib files
+                        PathClassLoader pathClassloader = new PathClassLoader(zip, parent);  // using PathClassLoader
+        
+        java.lang.ClassLoader cl = instrContext.getClassLoader(); // the classloader of instrContext is equal to the one of data.info
+        mInstrumentation = (Instrumentation) cl.loadClass(data.instrumentationName.getClassName()).newInstance();
+        mInstrumentation.init()
+        
+
 *** PM and Installd
 **** Package Manager
 Package Manager connect to installd by socket.
