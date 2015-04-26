@@ -7869,6 +7869,28 @@ ClassLinker::LinkInterfaceMethods()     (in class_linker.cc)
 why there is CreateArrayClass need to Class::SetIfTable, Creating a normal Class do not need.
 
 **** art: GC
+***** Launch GC by Alloc Object
+Heap::AllocObjectWithAllocator()
+    Heap::AllocateInternalWithGc()
+        CollectGarbageInternal()
+***** Launch GC when new_num_bytes_allocated >= concurrent_start_bytes_
+Heap::AllocObjectWithAllocator()
+    Heap::CheckConcurrentGC()
+        Heap::RequestConcurrentGCAndSaveObject()
+            Heap::RequestConcurrentGC()
+                Heap::ConcurrentGCTask()
+                    Heap::ConcurrentGC()
+                        Heap::CollectGarbageInternal()
+
+***** GC Process
+Heap::CollectGarbageInternal()
+    collector = FindCollectorByGcType(gc_type);    /// Choose a collector, by gc_type and collector_type
+                                                   /// gc_type: sticky, partial, full
+                                                   /// collector_type : MS, CMS, SS, GSS, MC, CC, so on
+                                                   /// collector: MarkSweep, PartialMarkSweep, StickyMarkSweep
+    MarkSweep::Run()
+
+
 ***** what is GC Roots
 The so-called GC (Garbage Collector) roots are objects special for garbage collector. Garbage collector collects those objects that are not GC roots and are not accessible by references from GC roots.
 
@@ -7887,6 +7909,7 @@ JNI Global - global JNI reference
 Monitor Used - objects used as a monitor for synchronization
 
 Held by JVM - objects held from garbage collection by JVM for its purposes. Actually the list of such objects depends on JVM implementation. Possible known cases are: the system class loader, a few important exception classes which the JVM knows about, a few pre-allocated objects for exception handling, and custom class loaders when they are in the process of loading classes. Unfortunately, JVM provides absolutely no additional detail for such objects. Thus it is up to the analyst to decide to which case a certain "Held by JVM" belongs.
+
 
 **** boot.art
 Boot.art is an memory image contains all root objs.
