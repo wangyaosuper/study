@@ -7932,6 +7932,18 @@ BaseDexClassLoader.loadClass()
                         DexFile_defineClassNative()  // in the dalvik_system_DexFile.cc
                             DexFile::FindClassDef()  // art/runtime/dex_file.cc
                             ....   // TODO
+**** dex2oat
+***** change the dex file
+CompilerDriver::CompileMethod()  // compiler_driver.cc    compile a method , into both arm and dex
+    QuickCompiler::Compile()   // quick_compiler.cc  into arm
+    DexCompiler::Compile()  // dex_to_dex_compiler.cc    into dex
+        DexCompiler::CompileInvokeVirtual()   // dex_to_dex_compiler.cc
+            CompilerDriver::ComputeInvokeInfo()  // get the vtable id
+            inst->SetOpcode()
+            inst->SetVRegB_3rc()
+
+NOTICE: The field access will also cause the dex been changed
+
 *** start up
 **** SystemServer
 The code of SystemServer is frameworks/base/services/java/com/android/server/SystemServer.java
