@@ -7944,6 +7944,13 @@ CompilerDriver::CompileMethod()  // compiler_driver.cc    compile a method , int
 
 NOTICE: The field access will also cause the dex been changed
 
+**** exception
+Thread::QuickDeliverException()  // thread.cc
+QuickExceptionHandler    // quick_exception_handler.cc
+Throwable   // throwable.cc
+ArtMethod::FindCatchBlock 
+CatchHandlerIterator  // dex_file.h
+
 *** start up
 **** SystemServer
 The code of SystemServer is frameworks/base/services/java/com/android/server/SystemServer.java
@@ -8018,6 +8025,27 @@ PackageManagerService.performBootDexOpt()  // Apps used in the 7 days for users 
 
 The installd is here
 frameworks/native/cmds/installd
+
+** using tools
+*** smali and baksmali
+baksmali the service.odex on a preodexed Lollipop.
+ 2051  adb pull /system/framework/arm64/boot.oat
+ 2057  java oat2dex.jar boot boot.oat
+ 2058  java -jar oat2dex.jar boot boot.oat
+ 2059  cd odex
+ 2064  adb pull /system/framework/arm64/services.odex
+ 2069  java -jar oat2dex.jar services.odex .
+ 2073  java -jar baksmali-2.0.5.jar -a 21 -x services.dex
+ 2083  java -jar smali-2.0.5.jar -a 21 out -o classes.dex
+ 2086  zip -jq services.jar classes.dex
+ 2089  adb remount
+ 2090  adb shell rm /system/framework/services.jar
+ 2091  adb shell rm /system/framework/arm64/services.odex
+ 2092  adb shell rm -rf /data/dalvik-cache/arm*
+ 2093  adb shell rm -rf /data/android_logs/*
+ 2097  adb push services.jar /system/framework/services.jar
+ 2098  adb reboot
+
 
 ** Emulator & qemu
 *** how to start emulator for Android
