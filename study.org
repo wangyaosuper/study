@@ -8051,8 +8051,17 @@ baksmali the service.odex on a preodexed Lollipop.
 
 
 ** Emulator & qemu
-*** how to start emulator for Android
+*** how to start emulator for Android 64bits
 ./prebuilts/android-emulator/linux-x86_64/emulator64-x86 -sysdir ./out/target/product/generic_x86_64/ -data userdata.img -kernel ./prebuilts/qemu-kernel/x86_64/kernel-qemu -memory 2048 -partition-size 1000 -gpu off  &
+*** how to start emulator for Android 32bits
+./prebuilts/android-emulator/linux-x86_64/emulator-x86 -sysdir ./out/target/product/generic_x86/ -data userdata.img -kernel ./prebuilts/qemu-kernel/x86/kernel-qemu -memory 2048 -partition-size 1000 -gpu off &
+*** how to start emulator with sdcard
+**** generate a sdcard image
+http://developer.android.com/guide/developing/tools/mksdcard.html
+mksdcard -l mySdCard 1024M sdcard.img
+mksdcard is at sdk/tools/mksdcard
+**** start emulator with sdcard
+./prebuilts/android-emulator/linux-x86_64/emulator-x86 -sysdir ./out/target/product/generic_x86/ -data userdata.img -kernel ./prebuilts/qemu-kernel/x86/kernel-qemu -memory 2048 -partition-size 1000 -gpu off -sdcard sdcard.img
 
 ** 刷机经验
 *** 将i9100刷成CyanogenMod
