@@ -8095,6 +8095,20 @@ i9100原声版本是Android2.3版本
 解决方法，在APP设置中，将trebuchet应用进行数据清理，重启，ok就好了。
 Nice，我的i9100用上了目前世界上最新版本的手机操作系统了，老树逢春，梅开二度啊。
 
+*** fastboot nexus5 on ubuntu 
+When I use fastboot, it said no permission.
+wyao@HackerToolBox:~/Downloads/m_preview/hammerhead-MPZ44Q$ fastboot devices
+no permissions	fastboot
+
+So I give the fastboot permission
+wyao@HackerToolBox:~/Downloads/m_preview/hammerhead-MPZ44Q$ sudo chown root:root /home/wyao/software/adt/sdk/platform-tools/fastboot
+sudo chmod +s /home/wyao/software/adt/sdk/platform-tools/fastboot
+
+and then it will work well.
+fastboot devices
+077983c843a77f94	fastboot
+
+
 ** source on the web
 *** mirror of the android.googlesource.com
 **** codeaurora.org
