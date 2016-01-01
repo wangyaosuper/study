@@ -7739,6 +7739,8 @@ ViewRootImpl.doTraversal()
 	    View.requestLayout()
 
 *** vm
+**** dalvik
+Good Doc : http://www.slideshare.net/jserv/understanding-the-dalvik-virtual-machine?from_search=4
 **** dalvik dexopt
 1. Main Flow
 main() // the Entry of the tool , dalvik/dexopt/OptMain.cpp
@@ -8152,6 +8154,15 @@ index f5dffb1..1d7cc92 100644
    <project path="external/safe-iop" name="platform/external/safe-iop" groups="p
    <project path="external/scrypt" name="platform/external/scrypt" groups="pdk"
 
+* AI
+** Framework
+leaf   machine learning  written by Rust
+
+expert systems
+    ExSys：第一個商用專家系統。
+    Mycin：一个诊断系统，其表现出人意料的好，误诊率达到专家级水平，超出一些诊所的医生。
+    Siri：一個通過辨識語音作業的專家系統，由蘋果公司收購並且推廣到自家產品內作為一個人秘書功能。
+http://www.infoq.com/cn/articles/zjl-siri
 
 * network
 ** emule和bt协议
