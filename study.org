@@ -942,6 +942,9 @@ git checkout master   #将本地工作区和本地默认的master分支进行关
 或者：
 第一步 git branch  <分支名称>   #创建一个本地分支
 第二步 git checkout <分支名称>  #将本地工作区切换至该分支管理上
+跟踪分支:
+git checkout --track origin/serverfix    #将当前分支和远程origin/serverfix分支关联
+git checkout -b sf origin/serverfix   #将本地sf分支和远程origin/serverfix分支关联
 3. 提交本地修改至本地分支
 第一步  git add <修改的文件的名称，或者.也可以> #将工作区的修改提交至临时区
 第二步  git commit   #将临时区的内容提交至本地分区
@@ -7927,6 +7930,16 @@ Runtime::Create(RuntimeOptions&)
 ImageSpace::Create()   in the art/runtime/gc/space/image_space.cc
 The option item named -Ximage
 
+VM use ImageSpace::Init() to load boot.art
+Runtime::Init()
+    new Heap()
+        ImageSpace::Create()
+            ImageSpace::Init()
+    ClassLinker::InitFromImage()      init class_roots_
+
+ClassLinker::AddBootImageClassesToClassTable()
+    
+
 **** BaseDexClassLoader
 BaseDexClassLoader.loadClass()
     ClassLoader.loadClass()
@@ -8153,6 +8166,7 @@ index f5dffb1..1d7cc92 100644
    <project path="external/robolectric" name="platform/external/robolectric" />
    <project path="external/safe-iop" name="platform/external/safe-iop" groups="p
    <project path="external/scrypt" name="platform/external/scrypt" groups="pdk"
+
 
 * AI
 ** Framework
