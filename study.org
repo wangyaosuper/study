@@ -8019,6 +8019,16 @@ ActivityThread.bindApplication()
         mInstrumentation.init()
         
 
+**** Activity Resume Flow
+ActivityStack.resumeTopActivityInnerLocked()
+ActivityThread.scheduleResumeActivity()
+sendMessage H.RESUME_ACTIVITY
+ActivityThread.handleResumeActivity()
+ActivityThread.performResumeActivity()
+Activity.performResume()
+Instrumentation.callActivityOnResume()
+Activity.onResume()
+
 *** PM and Installd
 **** Package Manager
 Package Manager connect to installd by socket.
