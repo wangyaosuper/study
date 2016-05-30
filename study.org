@@ -8021,13 +8021,46 @@ ActivityThread.bindApplication()
 
 **** Activity Resume Flow
 ActivityStack.resumeTopActivityInnerLocked()
-ActivityThread.scheduleResumeActivity()
-sendMessage H.RESUME_ACTIVITY
-ActivityThread.handleResumeActivity()
-ActivityThread.performResumeActivity()
-Activity.performResume()
-Instrumentation.callActivityOnResume()
-Activity.onResume()
+    ActivityThread.scheduleResumeActivity()
+        sendMessage H.RESUME_ACTIVITY
+            ActivityThread.handleResumeActivity()
+                ActivityThread.performResumeActivity()
+                    Activity.performResume()
+                        Instrumentation.callActivityOnResume()
+                            Activity.onResume()
+                WindowManagerGlobal.addView()
+                WindowManagerGlobal.updateViewLayout()
+
+*** Activity and Window
+Activity aggregate a PhoneWindow as mWindow.
+App using setContentView in onCreate() to layout the UI.
+
+Activity.onCreate()
+    Activity.setContentView(res_id)
+        PhoneWindow.setContentView(res_id)
+            LayoutInflater.inflate(res_id, parentContent)
+
+
+ViewRootImpl.profileRendering()
+ViewRootImpl.draw()   /// this is only animating, recurse to draw and layout
+ViewRootImpl.requestChildFocus()
+ViewRootImpl.clearChildFocus()
+ViewRootImpl.recomputeViewAttributes()
+ViewRootImpl.handleDispatchSystemUiVisibilityChanged()
+ViewRootImpl.setLayoutParams()
+ViewRootImpl.handleAppVisibility()
+ViewRootImpl.handleGetNewSurface()
+ViewRootImpl.DisplayListener.onDisplayChanged()
+ViewRootImpl.requestFitSystemWindows()
+ViewRootImpl.requestLayout
+ViewRootImpl.invalidate()
+    ViewRootImpl.scheduleTraversals()
+        ViewRootImpl.TraversalRunnable.run()
+            ViewRootImpl.doTraversal()
+                ViewRootImpl.performTraversals()
+                    host.layout()
+                    ViewRootImpl.performLayout()
+                    ViewRootImpl.performDraw()  !!!
 
 *** PM and Installd
 **** Package Manager
