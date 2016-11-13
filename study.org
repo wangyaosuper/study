@@ -7728,7 +7728,7 @@ Activity.setContentView()
 PhoneWindow.measure()
 PhoneWindow.onMeasure() // calc the heigh and wigth of the view
 ViewRootImpl.doTraversal()
-    ViewRootImpl.performTranversals()
+    ViewRootImpl.performTraversals()
         ViewRootImpl.performMeasure()
 	    View.performMeasure()
         ViewRootImpl.performLayout()
@@ -8032,6 +8032,12 @@ ActivityStack.resumeTopActivityInnerLocked()
                 WindowManagerGlobal.updateViewLayout()
 
 *** Activity and Window
+Good document
+Overview  http://blog.csdn.net/luoshengyang/article/details/8462738
+WMS organize win  http://blog.csdn.net/luoshengyang/article/details/8462738 
+WMS AMS APP communication http://blog.csdn.net/luoshengyang/article/details/8498908
+
+ 
 Activity aggregate a PhoneWindow as mWindow.
 App using setContentView in onCreate() to layout the UI.
 
@@ -8052,7 +8058,14 @@ ViewRootImpl.handleAppVisibility()
 ViewRootImpl.handleGetNewSurface()
 ViewRootImpl.DisplayListener.onDisplayChanged()
 ViewRootImpl.requestFitSystemWindows()
-ViewRootImpl.requestLayout
+ViewRootImpl.requestLayout()
+ViewGruop/View/ViewOverlay/ViewParent.invalidateChild()
+    ViewRootImpl.invalidateChild()
+        ViewRootImpl.invalidateChildInParent()
+            ViewRootImpl.invalidateRectOnScreen()
+ViewRootImpl.handleWindowContentChangedEvent()
+    ViewRootImpl.invalidateRectOnScreen()
+ViewRootImpl.setWindowStopped()
 ViewRootImpl.invalidate()
     ViewRootImpl.scheduleTraversals()
         ViewRootImpl.TraversalRunnable.run()
@@ -8061,6 +8074,40 @@ ViewRootImpl.invalidate()
                     host.layout()
                     ViewRootImpl.performLayout()
                     ViewRootImpl.performDraw()  !!!
+
+**** WindowManagerService
+1. Concept
+difference between AppWindowToken and WindowToken
+mTokenMap
+stack, task, session
+WindowStat   key concept. The connect between WindowStat and ApWindowToken
+从前面Android应用程序启动过程源代码分析一文可以知道，应用程序进程中的每一个Activity组件在Activity管理服务ActivityManagerService中都对应有一个ActivityRecord对象。从前面Android应用程序窗口（Activity）与WindowManagerService服务的连接过程分析一文又可以知道，Activity管理服务ActivityManagerService中每一个ActivityRecord对象在Window管理服务WindowManagerService中都对应有一个AppWindowToken对象。
+
+        此外，在输入法管理服务InputMethodManagerService中，每一个输入法窗口都对应有一个Binder对象，这个Binder对象在Window管理服务WindowManagerService又对应有一个WindowToken对象。
+
+        与输入法窗口类似，在壁纸管理服务WallpaperManagerService中，每一个壁纸窗口都对应有一个Binder对象，这个Binder对象在Window管理服务WindowManagerService也对应有一个WindowToken对象。
+
+        在Window管理服务WindowManagerService中，无论是AppWindowToken对象，还是WindowToken对象，它们都是用来描述一组有着相同令牌的窗口的，每一个窗口都是通过一个WindowState对象来描述的。例如，一个Activity组件窗口可能有一个启动窗口（Starting Window），还有若干个子窗口，那么这些窗口就会组成一组，并且都是以Activity组件在Window管理服务WindowManagerService中所对应的AppWindowToken对象为令牌的。从抽象的角度来看，就是在Window管理服务WindowManagerService中，每一个令牌（AppWindowToken或者WindowToken）都是用来描述一组窗口（WindowState）的，并且每一个窗口的子窗口也是与它同属于一个组，即都有着相同的令牌。
+2. Operation
+addAppToken(),
+createTaskLocked(),
+addWindow()
+
+3. relation-ship
+APP:
+IWindow.aidl
+Activity
+    ViewRootImpl
+        static class W extends IWindow.Stub
+Sepecial Window
+    BaseIWindow
+
+WindowManagerService:
+WindowStat
+AppWindowToken WindowToken
+
+ActivityManagerService:
+ActivityRecord
 
 *** PM and Installd
 **** Package Manager
