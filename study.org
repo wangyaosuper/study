@@ -6314,7 +6314,7 @@ struct task_struct *kthread_create(int (*threadfn)(void *data), void *data, cons
 
 
 *** 任务调度
-**** schedual函数群的学习
+**** 2.6 schedule()函数群的学习
 linux内核进程调度的核心函数是schedule
 对这个函数的介绍有一个非常好的博客
 http://blog.csdn.net/sunnybeike/article/details/6914703
@@ -6367,6 +6367,16 @@ load_sp0(tss, next); ， 这句展开就是  init_tss[cpu].esp0 = next_p->thread
 
 
 那么当__switch_to返回之后，就会进入前面在堆栈中准备好的1:那个地址上，然后通过pop恢复next任务的bsp等上下文
+
+**** 4.4 schedule()函数群学习
+4.4中schedule主入口还是:schedual()  -->  __schedule(bool preempt)  in  core.c
+schedule()是壳，主要实现在__schedule()
+kernel的sched_class有：
+- fair_sched_class
+- rt_sched_class
+他们是在哪里指定的，和task的关系是什么
+
+schedule的核心队列rq（runqueue），每一个CPU各有一个rq，rq的核心操作：
 
 *** 网络
 **** netfilter
