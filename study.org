@@ -991,6 +991,13 @@ push origin dev
 需要看一下.git/config 目录
 
 *** github
+**** 如何使用github的Token
+现在只有通过Token才能在本地通过CLI进行提交，已经不再支持命令行密码的提交方式。
+在  https://github.com/settings/tokens  上面生成一个Token（一个几十个字符的字符串）
+然后在本地git仓通过如下代码创建远端分支  https://$GH_TOKEN@github.com/owner/repo.git  ， 注意不需要$
+如创建origin远端仓库   git remote add origin https://ghp_LfGUION0fzp42t2VA@github.com/wangyaosuper/study
+后续提交代码就可以  git push origin master(本地分支):master(远端分支)     命令直接提交代码，不需要输入帐号名和密码
+
 **** github上面是怎么多人协作的
 github怎么做到多个账号维护一个git仓呢？
 首先作为一个参与者，要从主人那里fork他的一个git仓，
