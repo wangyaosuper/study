@@ -7584,6 +7584,52 @@ FAQ：
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
+*** QEMU
+**** 编译
+***** 构建ninjia （不编译glib，可以不用）
+下载： https://github.com/ninja-build/ninja
+编译：  ./configure.py --bootstrap
+安装：  sudo cp ./ninja /usr/bin/
+
+***** 构建 PCRE - Perl Compatible Regular Expressions  （不编译glib，可以不用）
+下载PCRE源码 @ http://www.pcre.org/
+编译：
+./configure --enable-utf8 --enable-unicode-properties --prefix=/home2/extend/toolchain/pcre-8.42/out/
+make
+make install
+配置：
+需要在环境变量中增加：
+SCRIPT_DIR=$(realpath .)
+export PCRE_CFLAGS="-I$SCRIPT_DIR/../pcre-8.42/out/include"
+export PCRE_LIBS="-L$SCRIPT_DIR/../pcre-8.42/out/lib -lpcre"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/
+
+
+
+***** 构建glib 2.48 on X86 Linux (for qemu 编译） （可以采取apt直接安装glib）
+下载路径：   https://download.gnome.org/sources/glib/2.48/
+编译：
+./configure --prefix=/home/wyao/extend/toolchain/glib-2.48.0/out
+make -j4
+make install
+
+需要在环境变量中增加：
+SCRIPT_DIR=$(realpath .)
+export PCRE_CFLAGS="-I$SCRIPT_DIR/../pcre-8.42/out/include"
+export PCRE_LIBS="-L$SCRIPT_DIR/../pcre-8.42/out/lib -lpcre"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/:$SCRIPT_DIR/../glib-2.48.0/out/lib/:$SCRIPT_DIR/../pixman-0.34.0/out/lib/
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SCRIPT_DIR/../glib-2.48.0/out/lib/pkgconfig:$SCRIPT_DIR/../pixman-0.34.0/out/lib/pkgconfig
+
+
+其中LD_LIBRARY_PATH 和 PKG_CONFIG_PATH 对于qemu的编译非常关键。
+PKG_CONFIG_PATH 是pkg-config获取各个so的.pc的路径配置， 用于在系统中注册.so库，和管理.so之间的依赖关系
+
+***** 构建QEMU
+下载： wget https://download.qemu.org/qemu-6.0.0.tar.xz
+
+
+
+
 * Android
 ** 代码阅读
 *** 好的网站
