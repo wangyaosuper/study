@@ -1,3 +1,4 @@
+
 * tool
 ** VIM
 *** 配置
@@ -7584,14 +7585,14 @@ FAQ：
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
-*** QEMU
-**** 编译
-***** 构建ninjia （不编译glib，可以不用）
+** QEMU
+*** 编译QEMU
+**** 构建ninjia （不编译glib，可以不用）
 下载： https://github.com/ninja-build/ninja
 编译：  ./configure.py --bootstrap
 安装：  sudo cp ./ninja /usr/bin/
 
-***** 构建 PCRE - Perl Compatible Regular Expressions  （不编译glib，可以不用）
+**** 构建 PCRE - Perl Compatible Regular Expressions  （不编译glib，可以不用）
 下载PCRE源码 @ http://www.pcre.org/
 编译：
 ./configure --enable-utf8 --enable-unicode-properties --prefix=/home2/extend/toolchain/pcre-8.42/out/
@@ -7605,8 +7606,7 @@ export PCRE_LIBS="-L$SCRIPT_DIR/../pcre-8.42/out/lib -lpcre"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/
 
 
-
-***** 构建glib 2.48 on X86 Linux (for qemu 编译） （可以采取apt直接安装glib）
+**** 构建glib 2.48 on X86 Linux (for qemu 编译） （可以采取apt直接安装glib）
 下载路径：   https://download.gnome.org/sources/glib/2.48/
 编译：
 ./configure --prefix=/home/wyao/extend/toolchain/glib-2.48.0/out
@@ -7624,9 +7624,237 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SCRIPT_DIR/../glib-2.48.0/out/lib/pkgco
 其中LD_LIBRARY_PATH 和 PKG_CONFIG_PATH 对于qemu的编译非常关键。
 PKG_CONFIG_PATH 是pkg-config获取各个so的.pc的路径配置， 用于在系统中注册.so库，和管理.so之间的依赖关系
 
-***** 构建QEMU
-下载： wget https://download.qemu.org/qemu-6.0.0.tar.xz
 
+**** 构建pixman1
+下载，编译pixman1，make install
+并且在环境变量中增加
+SCRIPT_DIR=$(realpath .)
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/:$SCRIPT_DIR/../pixman-0.34.0/out/lib/
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SCRIPT_DIR/../pixman-0.34.0/out/lib/pkgconfig
+
+
+**** 构建QEMU
+sudo apt install Ninja-build
+sudo apt install libglib2.0-dev
+sudo apt install libattr1-dev
+sudo apt install libcap-ng-dev
+
+
+下载： wget https://download.qemu.org/qemu-6.0.0.tar.xz
+./configure --prefix=/home/wyao/extend/qemu/qemu-6.0.0/out  --target-list=aarch64-softmmu,arm-softmmu --enable-virtfs --disable-kvm
+ 
+
+
+*** 设置交叉编译链
+在ARM的官网下载arm和aarch64的交叉编译链 （ *不好用， 找不到 gcc-arm-none-linux-eabi, 只能找到gcc-arm-none-eabi,编译不了busybox* ）
+https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
+
+也可以在http://www.codesourcery.com/ 上面下载,  
+可以在https://launchpad.net/gcc-arm-embedded/+download  上面下载 （也不行，也是 gcc-arm-none-eabi）
+*只有在https://mirrors.tuna.tsinghua.edu.cn/armbian-releases/_toolchain/ 上面才能下载到arm-linux-gnueabi的我们需要的工具链，验证过*
+ *重要，arm一定要下载 gcc-arm-none-linux-eabi 系列交叉工具链，否则编译busybox会不通过*
+ *都不可以 gcc-arm-none-eabi  ,  gcc-arm-linux-gnueabihf 都不可以*
+
+
+
+gcc-arm-linux-gnueabi-10.3-2021.07-x86_64-linux.tar.bz2 
+gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
+
+**** 以arm的为例
+解压xz包之后，工具链在bin目录下
+设置环境变量
+SCRIPT_DIR=$(realpath .)
+export LD_LIBRARY_PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux-gnueabi-/lib
+export PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux-gnueabi-/bin:$PATH
+
+
+*** 编译内核 for versatile  （ *废* )
+你能信，编译内核还要先安装curses
+sudo apt-get install libncurses5-dev
+
+make ARCH=arm versatile_defconfig
+make ARCH=arm menuconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
+
+输出结果 linux-4.4/arch/arm/boot/zImage
+
+
+*** 编译内核 for vexpress
+make ARCH=arm vexpress_defconfig
+make ARCH=arm menuconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 zImage
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4      (会失败，不要紧)
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- modules -j4
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- dtbs -j4
+
+*** 制作根文件系统
+**** 编译和制作busybox
+在https://busybox.net/downloads/   下载最新版本
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- defconfig
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
+重要，需要在menuconfig中将busybox设置为静态连接  Build Options->[*] Build BusyBox as a static binary (no shared libs);
+不是说动态链接不行，动态链接的话，一定要将rootfs中的动态库配置正确，有一定难度，第一次启动建议静态链接比较容易
+
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
+mkdir out
+
+**** 制作rootfs
+cd out
+mkdir rootfs
+cd ..
+cp -raf _install/* out/rootfs/
+cd out
+mkdir -p rootfs/proc/
+mkdir -p rootfs/sys/
+mkdir -p rootfs/tmp/
+mkdir -p rootfs/root/
+mkdir -p rootfs/var/
+mkdir -p rootfs/mnt/
+mkdir -p rootfs/lib
+cp -arf ~/extend/toolchain/gcc-linaro-7.4.1-2019.02-x86_64_arm-linux-gnueabi/arm-linux-gnueabi/libc/lib/* rootfs/lib/
+mkdir -p rootfs/dev/
+mknod rootfs/dev/tty1 c 4 1
+cd rootfs/
+mkdir -p proc sys  etc etc/init.d
+cd etc/init.d/
+emacs rcS
+cd ../..
+chmod +x etc/init.d/rcS
+sudo chgrp -R root ./*
+sudo chown -R root ./*
+find . | cpio -o --format=newc | gzip > ../rootfs.img.gz
+
+
+其中etc/init.d/rcS 的脚本内容为
+#!/bin/sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+/sbin/mdev -s
+ifconfig lo up
+ifconfig eth0 192.168.46.100 netmask 255.255.255.0
+route add default gw 10.0.2.33
+
+**** 不错的一篇文章
+Busybox for ARM on QEMU
+
+Posted on 2010/03/27
+
+Busybox is a solution for embedded Linux designs that need a compact filesystem: the trick is compiling and linking many system utilities into a single binary that behaves differently based on the name it was used to execute it. A working Linux root filesystem then consists in a small directory tree (/bin, /sbin, /usr/bin, …), a single executable binary in /bin/busybox, and many symbolic links to the Busybox binary (/bin/ls, /bin/sh, /sbin/ifconfig, …), and using a typical configuration it can be as small as 2MB (1MB if compressed).
+
+Last time I compiled a Linux kernel and a minimal root filesystem containing just a “Hello World” program. Now we can build a reasonably working root filesystem and test it using QEMU. Note that, in order to follow this example, you need:
+
+    The CodeSourcery Linux toolchain
+    A Linux kernel image compiled for the Versatile platform, with EABI support (here is how I created mine)
+    QEMU ARM emulator (the package to install is qemu on Debian or qemu-kvm-extras on Ubuntu)
+    Developer’s libraries for ncurses (the package to install is libncurses5-dev) to compile the menu configuration
+
+I downloaded version 1.16.0 of the Busybox source and extracted it. Inside the extracted directory I ran:
+
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- defconfig
+
+A default configuration file is created. To change it to our needs:
+
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- menuconfig
+
+I checked the option to compile Busybox as a static executable, so that we don’t have to copy the dynamic libraries inside the root filesystem. The setting can be found in “Busybox Settings --> Build Options“. Then, the following command builds Busybox and creates a directory called _install containing the root filesystem tree:
+
+$ make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- install
+
+We can now create a root filesystem image using the cpio tool, and in order to compact the filesystem even more, we can run gzip on it to create a compressed image:
+
+$ cd _install
+$ find . | cpio -o --format=newc > ../rootfs.img
+$ cd ..
+$ gzip -c rootfs.img > rootfs.img.gz
+
+In my case, the compressed image size is about 1MB. To test Busybox, we can emulate an ARM platform with QEMU using the following command, assuming we copy the Linux kernel zImage in the current directory:
+
+$ qemu-system-arm -M versatilepb -m 128M -kernel zImage -initrd rootfs.img.gz -append "root=/dev/ram rdinit=/bin/sh"
+
+The Linux kernel will boot, and the shell /bin/sh will be executed as specified by the boot parameter rdinit, showing the common “#” prompt. The shell can be used normally, for example you can run ls to find the same directory structure of the Busybox _install directory, but using commands like ps and mount we can see that not everything is in place: both programs complain abount the /proc directory. We can create and populate the /proc directory running these commands inside the QEMU emulated system prompt:
+
+# mkdir /proc
+# mount -t proc none /proc
+
+After that, the ps and mount programs work fine. We can also note that the /dev directory is almost empty (the only exception being the console device). To populate it we need to mount also the /sys directory, so that we can use the mdev tool; run inside QEMU:
+
+# mkdir /sys
+# mount -t sysfs none /sys
+# mdev -s
+
+The /sys and /dev directory are now populated. To execute these steps every time, we can use /sbin/init functionality: this program is usually the first run by the Linux kernel, and its default behavior is to execute the initialization file with path /etc/init.d/rcS. In the host computer this time, in the folder where we compiled Busybox, we create the missing directories:
+
+$ cd _install
+$ mkdir proc sys dev etc etc/init.d
+$ cd ..
+
+Now we create a new _install/etc/init.d/rcS with the following content:
+
+#!/bin/sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+/sbin/mdev -s
+
+Then set it as an executable file:
+
+$ chmod +x _install/etc/init.d/rcS
+
+We can then recreate an updated root filesystem compressed image as before, and run:
+
+$ qemu-system-arm -M versatilepb -m 128M -kernel zImage -initrd rootfs.img.gz -append "root=/dev/ram rdinit=/sbin/init"
+
+The Linux kernel will boot again, but this time it is asking to press Enter, and when we do the usual console prompt will appear. The system directories are fully populated, meaning that the script rcS has been executed; other than that, /sbin/init also spawns shell terminals using getty.
+
+In our example the Busybox filesystem is accessed using a ram disk, but it can also be read from a physical disk storage or loaded from the network using NFS protocol. Maybe another time I will describe in details how to run Busybox with NFS inside QEMU.
+
+
+*** 启动qemu
+( *废* )./qemu-system-arm -M versatilepb -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram  rdinit=/sbin/init console=ttyAMA0" --serial file:/tmp/serial.out
+
+*以下是经过验证的*
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial file:/tmp/serial.out
+
+**** 调试启动qemu中遇到关键坑
+1. 看不到开机打印
+ console=ttyAMA0 很重要，这样才能看到开机日志
+ 不然看不到在哪里出错了
+2. 内存不够
+ -m 256M 
+否则linux4.4起不来
+3. init找不到
+在--append中增加init
+
+4. init启动失败
+---[ end Kernel panic - not syncing: Requested init /sbin/init failed (error -8).
+error -8 =  ENOEXEC
+
+发现是由于busybox交叉编译失误导致，init进程编译出来是x86指令集
+wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ arm-linux-gnueabi-objdump -a busybox 
+arm-linux-gnueabi-objdump: busybox: file format not recognized
+wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ objdump ./busybox  -a
+
+./busybox:     file format elf64-x86-64
+./busybox
+
+
+5. init退出
+[<c001a0ac>] (unwind_backtrace) from [<c0017554>] (show_stack+0x10/0x14)
+[<c0017554>] (show_stack) from [<c030b5a0>] (panic+0x7c/0x1d8)
+[<c030b5a0>] (panic) from [<c0022ce0>] (do_exit+0x828/0x8c0)
+[<c0022ce0>] (do_exit) from [<c0023bb4>] (do_group_exit+0x3c/0xb8)
+[<c0023bb4>] (do_group_exit) from [<c002cf14>] (get_signal+0xec/0x654)
+[<c002cf14>] (get_signal) from [<c0016eec>] (do_signal+0xc0/0x404)
+[<c0016eec>] (do_signal) from [<c00173f0>] (do_work_pending+0xb0/0xc0)
+[<c00173f0>] (do_work_pending) from [<c00141bc>] (slow_work_pending+0xc/0x20)
+---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
+
+可能原因1： busybox采用动态链接库编译， 和rootfs中的动态库部匹配
+可能原因2： rootfs的uid不是root
+可能原因3： 使用了 hard-float EABI的工具链， 即arm-linux-gnueabi-， 应该换成 arm-linux-gnueab
+可能原因4： qemu -M versatilepb 是armv5的核，太老了，我们需要一个armv7-a 以上的核
 
 
 
