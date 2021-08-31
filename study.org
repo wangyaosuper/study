@@ -7649,10 +7649,10 @@ sudo apt install libcap-ng-dev
 在ARM的官网下载arm和aarch64的交叉编译链 （ *不好用， 找不到 gcc-arm-none-linux-eabi, 只能找到gcc-arm-none-eabi,编译不了busybox* ）
 https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
 
-也可以在http://www.codesourcery.com/ 上面下载,  
-可以在https://launchpad.net/gcc-arm-embedded/+download  上面下载 （也不行，也是 gcc-arm-none-eabi）
+也可以在http://www.codesourcery.com/ 上面下载,   但是要翻墙
+可以在https://launchpad.net/gcc-arm-embedded/+download  上面下载 （也不行，这上面也只有 gcc-arm-none-eabi）
 *只有在https://mirrors.tuna.tsinghua.edu.cn/armbian-releases/_toolchain/ 上面才能下载到arm-linux-gnueabi的我们需要的工具链，验证过*
- *重要，arm一定要下载 gcc-arm-none-linux-eabi 系列交叉工具链，否则编译busybox会不通过*
+ *重要，arm一定要下载 gcc-arm-none-linux-eabi 系列交叉工具链，否则busybox编不过*
  *都不可以 gcc-arm-none-eabi  ,  gcc-arm-linux-gnueabihf 都不可以*
 
 
@@ -7660,7 +7660,7 @@ https://developer.arm.com/tools-and-software/open-source-software/developer-tool
 gcc-arm-linux-gnueabi-10.3-2021.07-x86_64-linux.tar.bz2 
 gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
 
-**** 以arm的为例
+**** 设置工具链环境变量，以arm的为例
 解压xz包之后，工具链在bin目录下
 设置环境变量
 SCRIPT_DIR=$(realpath .)
@@ -7668,7 +7668,7 @@ export LD_LIBRARY_PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux
 export PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux-gnueabi-/bin:$PATH
 
 
-*** 编译内核 for versatile  （ *废* )
+*** 编译内核 for versatile开发板  （ *废* )
 你能信，编译内核还要先安装curses
 sudo apt-get install libncurses5-dev
 
@@ -7679,7 +7679,8 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
 输出结果 linux-4.4/arch/arm/boot/zImage
 
 
-*** 编译内核 for vexpress
+*** 编译内核 for vexpress开发板
+
 make ARCH=arm vexpress_defconfig
 make ARCH=arm menuconfig
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 zImage
@@ -7687,6 +7688,7 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 zImage
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4      (会失败，不要紧)
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- modules -j4
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- dtbs -j4
+
 
 *** 制作busybox和根文件系统
 **** 编译和制作busybox
@@ -7696,7 +7698,7 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- defconfig
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
 重要，需要在menuconfig中将busybox设置为静态连接  Build Options->[*] Build BusyBox as a static binary (no shared libs);
 不是说动态链接不行，动态链接的话，一定要将rootfs中的动态库配置正确，有一定难度，第一次启动建议静态链接比较容易
-不过认真按照本文的介绍，是可以不用设置成static binary的
+*不过认真按照本文的介绍，是可以不用设置成static binary的， 是完全可以share library的*
 
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
@@ -7796,6 +7798,8 @@ root:l.50wPKnwHfxc:0:0:Linux User,,,:/home/root:/bin/sh
 root:x:0:
 
 **** 不错的一篇文章
+这一章节转自  Freedom Embedded Balau's technical blog on open hardware, free software and security， https://balau82.wordpress.com/2010/03/27/busybox-for-arm-on-qemu/    
+
 Busybox for ARM on QEMU
 
 Posted on 2010/03/27
@@ -7881,7 +7885,7 @@ netmask 255.255.255.0
 host在内网中的ipaddress, 即NAT上行网关： 10.0.2.2
 dns 10.0.2.3
 
-*如上配置完成后，guest系统就可以ping通host机器真实网卡的ip地址
+*如上配置完成后，guest系统就可以ping通host机器真实网卡的ip地址*
 
 附：用户模式的参数选项描述如下：
 vlan=vlan编号，将用户模式网络栈连接到编号为n的VLAN中（默认值为0）。
@@ -7900,7 +7904,7 @@ putty用host的2323端口登陆guest, 相当于从外网访问guest内网
 
 
 *** 制作和挂载磁盘
-qemu-img create -f qcow2 test.qcow2 30M
+qemu-img create -f qcow2 test.qcow2 32M
 在qemu启动命令中增加--sd ~/extend/qemu/busybox-1.34.0/out/test.qcow2  ， 就可以在启动的时候挂载上sdcard
 在guest系统的/dev中可以看到对应block设备
 brw-rw----    1 0        0         179,   0 Aug 31 02:55 mmcblk0
@@ -7908,13 +7912,13 @@ brw-rw----    1 0        0         179,   0 Aug 31 02:55 mmcblk0
 在busybox中使用 fdisk 下面的n命令可以对该sdcard 进行分区
 在busybox中使用 mkfs.vfat /dev/mmcblk0  ， 对该sdcard进行格式化
 
-挂载：mount -t vfat /dev/mmcblk0 /mnt/disk1/
+下次启动busybox中设置rcS脚本自动挂载：mount -t vfat /dev/mmcblk0 /mnt/disk1/
 
 后续长期挂载使用，可以采取修改根目录  /etc/fstab文件，将sdcard挂载点增加进去
 
 
 *** 支持telnet
-建立普通目录 
+建立设备目录 和设备文件
 mkdir /etc/pts
 sudo mknod rootfs/dev/pts/0 c 136 0
 sudo mknod rootfs/dev/pts/1 c 136 1
@@ -7950,23 +7954,27 @@ putty用host的2323端口登陆guest
 *** 启动qemu
 ( *废* )./qemu-system-arm -M versatilepb -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram  rdinit=/sbin/init console=ttyAMA0" --serial file:/tmp/serial.out
 
-*以下是经过验证的, 可以看启动日志*
+*以下经过验证*
+
+*迭代0，可以在/tmp/serial.out看内核启动日志*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial file:/tmp/serial.out
 
 
-*BEST，可以进行stdio serial 命令行交互的*
+*迭代1，可以进行stdio serial 命令行交互的*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio
 
 
-*BEST，可以进行NET模式的网络通信*
+*迭代2，可以进行NET模式的网络通信*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user
 
-*BEST，挂载了qcow2格式的sdcard*
+*迭代3，挂载了qcow2格式的sdcard*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user
 
-*BEST，支持了telnet，并支持了login*
+*迭代4，支持了telnet，并支持了login*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23
 
+*迭代5，BEST，后台运行，有telnet，但是没有启动日志*
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize
 
 
 **** 调试启动qemu中遇到关键坑
@@ -7976,7 +7984,6 @@ putty用host的2323端口登陆guest
  两个配置很重要，这样才能看到开机日志
  不然看不到在哪里出错了
 
-
 2. 内存不够
  -m 256M 
 否则linux4.4起不来
@@ -7985,11 +7992,11 @@ putty用host的2323端口登陆guest
 在--append中增加rdinit
 且rootfs.img中所有的文件和目录需要归属于root用户和root group
 
-4. init启动失败
+4. init启动失败panic
 ---[ end Kernel panic - not syncing: Requested init /sbin/init failed (error -8).
 error -8 =  ENOEXEC
 
-发现是由于busybox交叉编译失误导致，init进程编译出来是x86指令集
+发现是由于busybox交叉编译时编译器选择失误导致，init进程编译出来是x86指令集
 wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ arm-linux-gnueabi-objdump -a busybox 
 arm-linux-gnueabi-objdump: busybox: file format not recognized
 wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ objdump ./busybox  -a
@@ -7998,7 +8005,7 @@ wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ objdump ./busybox 
 ./busybox
 
 
-5. init因为非法指令退出
+5. init因为非法指令panic
 [<c001a0ac>] (unwind_backtrace) from [<c0017554>] (show_stack+0x10/0x14)
 [<c0017554>] (show_stack) from [<c030b5a0>] (panic+0x7c/0x1d8)
 [<c030b5a0>] (panic) from [<c0022ce0>] (do_exit+0x828/0x8c0)
@@ -8009,10 +8016,10 @@ wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ objdump ./busybox 
 [<c00173f0>] (do_work_pending) from [<c00141bc>] (slow_work_pending+0xc/0x20)
 ---[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000004
 
-可能原因1： busybox采用动态链接库编译， 和rootfs中的动态库部匹配 （排除）
-可能原因2： rootfs的uid不是root  （排除）
-可能原因3： 使用了 hard-float EABI的工具链， 即arm-linux-gnueabi-， 应该换成 arm-linux-gnueab （原因之一）
-可能原因4： qemu -M versatilepb 是armv5的核，太老了，我们需要一个armv7-a 以上的核   （原因之一）
+可能原因1： busybox采用动态链接库编译， 和rootfs中部署的动态库eabi版本不匹配 （排除）
+可能原因2： rootfs中关键文件蜀主uid不是root  （排除）
+可能原因3： 使用了 hard-float EABI的工具链， 即arm-linux-gnueabi-， 应该换成 arm-linux-gnueab （实际原因之一）
+可能原因4： qemu -M versatilepb 是armv5的核，太老了，编译工具链是v7版本，我们需要一个armv7-a 以上的核的CPU和开发版，调整开发版至vexpress-a9    （实际原因之一）
 
 
 
