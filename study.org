@@ -275,7 +275,7 @@ let g:miniBufExplMapWindowNavVim = 1
 let g:miniBufExplMapWindowNavArrows = 1
 let g:miniBufExplMapCTabSwitchBufs = 1
 let g:miniBufExplModSelTarget = 1
-** emacs  
+** emacs 
 *** emacs下配置python开发环境
 + 相关网站
 官方网站：http://pymacs.progiciels-bpi.ca/
@@ -6256,7 +6256,11 @@ cutime=0                            所有已死线程在用户态运行的时�
 cstime=0                            所有已死在核心态运行的时间，单位为jiffies
 
 ** kernel学习
-*** 启动 （自己总结）							 
+*** 自学整理PPT
+[[file:doc/Kernel/Linux内核讨论v0.2.pptx]]
+
+
+*** 启动 （自己总结） 
 **** start_kernel
 1) page_address_init()  
    初始化page_address_pool, 将page_address_maps都挂载page_address_pool
@@ -7336,6 +7340,7 @@ j          do_\handler
 
 
 *** 系统调用
+
 **** mips
 traps.c ----> set_except_vector(8, handle_sys);  // 设置系统调用的入口
 scall64-o32.S --- > NESTED(handle_sys, PT_SIZE, sp)  
@@ -7347,6 +7352,10 @@ entry.S       ----->  syscall_exit  ----> resume_userspace
 在这里scall64-o32.S 中的 sys_call_table
 
      
+
+*** 如何下载指定分支的Kernel代码
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git --depth 1 --branch linux-5.1.y
+
 
 
 ** 驱动学习
@@ -7607,6 +7616,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/
 
 
 **** 构建glib 2.48 on X86 Linux (for qemu 编译） （可以采取apt直接安装glib）
+此处glib，不是libc， 这是gnome团队开发的lib，gdk和gtk的底座
 下载路径：   https://download.gnome.org/sources/glib/2.48/
 编译：
 ./configure --prefix=/home/wyao/extend/toolchain/glib-2.48.0/out
@@ -7642,7 +7652,8 @@ sudo apt install libcap-ng-dev
 
 下载： wget https://download.qemu.org/qemu-6.0.0.tar.xz
 ./configure --prefix=/home/wyao/extend/qemu/qemu-6.0.0/out  --target-list=aarch64-softmmu,arm-softmmu --enable-virtfs --disable-kvm
- 
+make -j4
+make install 
 
 
 *** 设置交叉编译链
@@ -7653,27 +7664,34 @@ https://developer.arm.com/tools-and-software/open-source-software/developer-tool
 可以在https://launchpad.net/gcc-arm-embedded/+download  上面下载 （也不行，这上面也只有 gcc-arm-none-eabi）
 *只有在https://mirrors.tuna.tsinghua.edu.cn/armbian-releases/_toolchain/ 上面才能下载到arm-linux-gnueabi的我们需要的工具链，验证过*
  *重要，arm一定要下载 gcc-arm-none-linux-eabi 系列交叉工具链，否则busybox编不过*
- *都不可以 gcc-arm-none-eabi  ,  gcc-arm-linux-gnueabihf 都不可以*
+ *gcc-arm-none-eabi  ,  gcc-arm-linux-gnueabihf 都不可以用于qemu-arm32的buxybox编译*
 
 
 
 gcc-arm-linux-gnueabi-10.3-2021.07-x86_64-linux.tar.bz2 
 gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
 
-**** 设置工具链环境变量，以arm的为例
-解压xz包之后，工具链在bin目录下
-设置环境变量
+设置工具链环境变量，以arm的为例,解压xz包之后，工具链在bin目录下,设置环境变量
+编写环境变量脚本env_prepare_rc,内容如下
+
 SCRIPT_DIR=$(realpath .)
-export LD_LIBRARY_PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux-gnueabi-/lib
-export PATH=$SCRIPT_DIR/../gcc-linaro-10.2.1-2021.04-x86_64_arm-linux-gnueabi-/bin:$PATH
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SCRIPT_DIR/../pcre-8.42/out/lib/:$SCRIPT_DIR/../pixman-0.34.0/out/lib/:$SCRIPT_DIR/../gcc-linaro-7.4.1-2019.02-x86_64_arm-linux-gnueabi/lib
+
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SCRIPT_DIR/../pixman-0.34.0/out/lib/pkgconfig
+
+export PATH=$SCRIPT_DIR/../gcc-linaro-7.4.1-2019.02-x86_64_arm-linux-gnueabi/bin:$PATH
+
+
+交叉编译前source env_prepare_rc
 
 
 *** 编译内核 for versatile开发板  （ *废* )
-你能信，编译内核还要先安装curses
+你能信，编译内核还要先安装curses， 当然menuconfig才会用
 sudo apt-get install libncurses5-dev
 
 make ARCH=arm versatile_defconfig
-make ARCH=arm menuconfig
+make ARCH=arm menuconfig  （可以啥都不改）
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
 
 输出结果 linux-4.4/arch/arm/boot/zImage
@@ -7682,10 +7700,10 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 all
 *** 编译内核 for vexpress开发板
 
 make ARCH=arm vexpress_defconfig
-make ARCH=arm menuconfig
+make ARCH=arm menuconfig  （可以啥都不改）
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 zImage
 
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4      (会失败，不要紧)
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4      (可以不做，会失败不要紧)
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- modules -j4
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- dtbs -j4
 
@@ -7799,7 +7817,7 @@ root:x:0:
 
 **** 不错的一篇文章
 这一章节转自  Freedom Embedded Balau's technical blog on open hardware, free software and security， https://balau82.wordpress.com/2010/03/27/busybox-for-arm-on-qemu/    
-
+是同行写的根目录制作方法，可以同时参考
 Busybox for ARM on QEMU
 
 Posted on 2010/03/27
@@ -7874,6 +7892,7 @@ In our example the Busybox filesystem is accessed using a ram disk, but it can a
 
 
 *** 支持qemu的NET模式的网络通信
+NET模式类似与VmWare的net模式，qemu作为防火墙，为guest提供NET映射。
 guest系统的/etc/init.rd/rcS 中增加
 ifconfig eth0 10.0.2.33 netmask 255.255.255.0
 route add default gw 10.0.2.2
@@ -7904,8 +7923,14 @@ putty用host的2323端口登陆guest, 相当于从外网访问guest内网
 
 
 *** 制作和挂载磁盘
-qemu-img create -f qcow2 test.qcow2 32M
-在qemu启动命令中增加--sd ~/extend/qemu/busybox-1.34.0/out/test.qcow2  ， 就可以在启动的时候挂载上sdcard
+创建磁盘镜像文件
+qemu-img create -f raw test.raw 32M
+格式化成vfat fs
+mkfs.vfat disk1.raw
+
+在qemu启动命令中增加--sd ~/extend/qemu/busybox-1.34.0/out/test.raw  ， 就可以在启动的时候像Flash一样挂载上磁盘镜像
+
+在guest系统中也可以对镜像文件进行格式化
 在guest系统的/dev中可以看到对应block设备
 brw-rw----    1 0        0         179,   0 Aug 31 02:55 mmcblk0
 
@@ -7967,14 +7992,17 @@ putty用host的2323端口登陆guest
 *迭代2，可以进行NET模式的网络通信*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user
 
-*迭代3，挂载了qcow2格式的sdcard*
-./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user
+*迭代3，挂载了raw格式的vfat文件系统磁盘镜像*
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user
 
 *迭代4，支持了telnet，并支持了login*
-./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0" --serial stdio --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23
 
 *迭代5，BEST，后台运行，有telnet，但是没有启动日志*
-./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.qcow2 --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/zImage --dtb ~/extend/qemu/kernel_for_qemu_without_git/linux-4.4.281/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize
+
+*迭代6, kernel 5.1*
+./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/zImage --dtb ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize
 
 
 **** 调试启动qemu中遇到关键坑
