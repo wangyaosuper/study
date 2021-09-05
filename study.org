@@ -8004,6 +8004,8 @@ putty用host的2323端口登陆guest
 *迭代6, kernel 5.1*
 ./qemu-system-arm -M vexpress-a9 -m 256M --kernel ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/zImage --dtb ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize
 
+*迭代7, 可以进行lmbench 性能测试*
+./qemu-system-arm -M vexpress-a9 -m 512M --kernel ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/zImage --dtb ~/extend/qemu/stable_kernel_for_qemu/linux-stable-5.1/arch/arm/boot/dts/vexpress-v2p-ca9.dtb --initrd ~/extend/qemu/busybox-1.34.0/out/rootfs.img.gz --sd ~/extend/qemu/disk/disk1.raw --append "root=/dev/ram rdinit=/sbin/init console=ttyAMA0"  --net nic --net user,hostfwd=tcp:127.0.0.1:2323-10.0.2.33:23  --serial file:/tmp/serial.out --daemonize --icount shift=2
 
 **** 调试启动qemu中遇到关键坑
 1. 看不到开机打印
