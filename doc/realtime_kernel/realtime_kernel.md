@@ -52,8 +52,30 @@ env OS=arm-gnu-linux ./results
 fork出海量子进程，父进程和子进程之间频繁进行pipe发送消息，实现进程间频繁切换
 测量过程时间，并扣除pipe操作时间
 
+## 如何使用Linux的 RT Patch
+1. cp patch-4.19.94-rt38.patch /home/zsj	# 拷贝 rt 补丁包到 /home/zsj 目录
+2. cd /home/zsj/linux-4.19.94   			# 进入内核源码目录
+3. patch -p1 <../patch-4.19.94-rt38.patch   # 给内核打入实时补丁包
+4. make menuconfig                          # 进入内核的图像化配置界面
+5. /PREEMPT_RTB								# 搜素 rt 选项的位置，并进入该位置，勾选 Fully Preemptible Kernel(RT) 后，保存退出
+6. make uImage	-j4							# 编译 rt 内核
+7. # 替换到原有的 uImage 后，重启即可
+8. uname -a									# 检查 rt 移植是否成功
+————————————————
+版权声明：本文为CSDN博主「end_宿命」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/qq_27149449/article/details/118857704
 
-## Linux的RT Patch
+### 如何编译RT Kernel
+menuconfig中激活 Configure standard kernel features (expert users)  为 Y
+然后选择 Preemption Model 为 Fully Preemptible Kernel (Real-Time)
+最后在外层的Kernel Hacking中关闭 check for stack overflows
+
+
+
+
+## Linux的 RT Patch内容
+
+
 ### CONFIG_PREEMPT_RT_FULL
 #### switch_kmaps
 /arch/arm/include/asm/switch_to.h
