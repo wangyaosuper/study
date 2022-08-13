@@ -8052,6 +8052,13 @@ wyao@york-Ubuntu:~/extend/qemu/busybox-1.34.0/out/rootfs/bin$ objdump ./busybox 
 可能原因4： qemu -M versatilepb 是armv5的核，太老了，编译工具链是v7版本，我们需要一个armv7-a 以上的核的CPU和开发版，调整开发版至vexpress-a9    （实际原因之一）
 
 
+** 标准Linux非实时的问题
+为什么标准Linux Kernel的实时性不行：
+1. 临界区
+2. 内核不可被抢占
+3. 固定的时间片调度 （最低优先级任务也会被调度）
+4. Kernel 时钟周期 10ms，（保障吞吐率，牺牲实时性）
+
 
 * Android
 ** 代码阅读
