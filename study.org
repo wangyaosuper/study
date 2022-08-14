@@ -995,9 +995,15 @@ push origin dev
 **** 如何使用github的Token
 现在只有通过Token才能在本地通过CLI进行提交，已经不再支持命令行密码的提交方式。
 在  https://github.com/settings/tokens  上面生成一个Token（一个几十个字符的字符串）
-然后在本地git仓通过如下代码创建远端分支  https://$GH_TOKEN@github.com/owner/repo.git  ， 注意不需要$
-如创建origin远端仓库   git remote add origin https://ghp_LfGUION0fzp42t2VA@github.com/wangyaosuper/study
+
++然后在本地git仓通过如下代码创建远端分支  https://$GH_TOKEN@github.com/owner/repo.git  ， 注意不需要$+
++如创建origin远端仓库   git remote add origin https://ghp_LfGUION0fzp42t2VA@github.com/wangyaosuper/study+
+
+*好像更应该是按照这种方式来创建origin远端仓库*
+  git remote add origin https://github.com/wangyaosuper/SwiftUI-MultipeerConnectivity_Test_Chatroom.git 
+  
 后续提交代码就可以  git push origin master(本地分支):master(远端分支)     命令直接提交代码，不需要输入帐号名和密码
+这时git会要求输入密码，讲ghp_打头的Token字符串提交就可以了 (在Ubuntu的Document，在iClould的备忘录 和 印象笔记中有记录这个字符串)
 
 **** github上面是怎么多人协作的
 github怎么做到多个账号维护一个git仓呢？
